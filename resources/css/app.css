@@ -1,0 +1,207 @@
+/* ======================== */
+/* === DIRECTIVES DE BASE === */
+/* ======================== */
+
+/* Import des utilitaires Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import des styles personnalisés */
+@import "./styles/dashboard.css";
+
+/* ============================= */
+/* === VARIABLES THEMATIQUES === */
+/* ============================= */
+
+/**
+ * Variables pour le thème clair
+ * Utilise HSL pour une meilleure gestion des couleurs
+ */
+:root {
+  /* Couleurs de base */
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(222.2, 84%, 4.9%);
+  
+  /* Couleurs des composants */
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222.2, 84%, 4.9%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222.2, 84%, 4.9%);
+  
+  /* Couleurs sémantiques */
+  --primary: hsl(221.2, 83.2%, 53.3%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(210, 40%, 96.1%);
+  --secondary-foreground: hsl(222.2, 47.4%, 11.2%);
+  
+  /* États */
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  
+  /* Bordures et interactions */
+  --border: hsl(214.3, 31.8%, 91.4%);
+  --input: hsl(214.3, 31.8%, 91.4%);
+  --ring: hsl(221.2, 83.2%, 53.3%);
+  
+  /* Arrondis */
+  --radius: 0.75rem;
+}
+
+/**
+ * Surcharge pour le thème sombre
+ * Mêmes variables mais avec des valeurs adaptées
+ */
+.dark {
+  --background: hsl(222.2, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222.2, 84%, 4.9%);
+  /* ... autres surcharges ... */
+}
+
+/* ====================== */
+/* === STYLES DE BASE === */
+/* ====================== */
+
+/* Reset des bordures */
+* {
+  border-color: var(--border);
+}
+
+/* Styles du corps de la page */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Masque les éléments non chargés (pour Alpine.js) */
+[x-cloak] {
+  display: none;
+}
+
+/* ========================== */
+/* === ANIMATIONS & EFFETS === */
+/* ========================== */
+
+/* Définitions des keyframes */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Classes d'animation réutilisables */
+.animate-fade-in {
+  animation: fade-in 0.6s forwards;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s forwards;
+}
+
+/* Délais d'animation personnalisables */
+[class*="animation-delay-"] {
+  animation-delay: var(--delay);
+}
+.animation-delay-100 { --delay: 0.1s; }
+.animation-delay-200 { --delay: 0.2s; }
+.animation-delay-300 { --delay: 0.3s; }
+
+/* ======================== */
+/* === EFFETS "VERRE" === */
+/* ======================== */
+
+/**
+ * Bouton avec effet glass morphism
+ * Utilise backdrop-filter pour le flou d'arrière-plan
+ */
+.glass-button {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); /* Préfixe pour Safari */
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* États interactifs */
+.glass-button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Version alternative avec variables CSS */
+.glass-button-alt {
+  background-color: rgba(var(--primary), 0.8);
+  color: white;
+  backdrop-filter: blur(5px);
+}
+
+/* ======================== */
+/* === COMPOSANTS UI === */
+/* ======================== */
+
+/* Lien animé avec effet de soulignement */
+.animated-link {
+  position: relative;
+  display: inline-block;
+}
+
+.animated-link::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--primary);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s;
+}
+
+.animated-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* Style de focus accessible */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary), 0 0 0 4px var(--background);
+}
+
+/* ======================== */
+/* === UTILITAIRES === */
+/* ======================== */
+
+/* Effet de survol avec scale */
+.transform:hover\:scale-\[1\.02\]:hover {
+  transform: scale(1.02);
+}
+
+/* Background semi-transparent */
+.bg-white\/80 {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Version sombre */
+.dark .bg-gray-800\/80 {
+  background-color: rgba(31, 41, 55, 0.8);
+}
+
+/* Flou d'arrière-plan */
+.backdrop-blur-lg {
+  backdrop-filter: blur(16px);
+}
