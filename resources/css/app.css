@@ -121,24 +121,18 @@ body {
 /* === EFFETS "VERRE" === */
 /* ======================== */
 
-/**
- * Bouton avec effet glass morphism
- * Utilise backdrop-filter pour le flou d'arrière-plan
- */
 .glass-button {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px); /* Préfixe pour Safari */
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background-color: #2563eb; /* Nouvelle couleur bleue */
+  color: white;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
-/* États interactifs */
 .glass-button:hover {
-  transform: scale(1.03);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  background: rgba(255, 255, 255, 0.18);
+  background-color: #1d4ed8; /* Version plus foncée au survol */
+  transform: scale(1.05);
 }
 
 /* Version alternative avec variables CSS */
@@ -153,10 +147,7 @@ body {
 /* ======================== */
 
 /* Lien animé avec effet de soulignement */
-.animated-link {
-  position: relative;
-  display: inline-block;
-}
+
 
 .animated-link::after {
   content: "";
@@ -205,3 +196,4 @@ body {
 .backdrop-blur-lg {
   backdrop-filter: blur(16px);
 }
+

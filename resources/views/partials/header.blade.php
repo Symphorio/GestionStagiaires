@@ -1,24 +1,39 @@
 <header class="fixed w-full bg-white shadow-sm z-50">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
         <div class="flex items-center">
-            <a href="/" class="text-xl font-bold text-gray-800">MASAM Stages</a>
+            <a href="/" class="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors duration-300">MASM Stages</a>
         </div>
         <nav class="hidden md:flex space-x-8">
-            <a href="/" class="text-gray-600 hover:text-gray-900">Accueil</a>
-            <a href="{{ route('stage.formulaire') }}" class="text-gray-600 hover:text-gray-900">Demande</a>
-            <a href="{{ route('login') }}" class="text-gray-600 hover:text-gray-900">Connexion</a>
+            <a href="/" class="nav-link group relative">
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Accueil</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="{{ route('stage.formulaire') }}" class="nav-link group relative">
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Demande</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="{{ route('login') }}" class="nav-link group relative">
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Connexion</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+            </a>
         </nav>
         <button class="md:hidden focus:outline-none" id="mobileMenuButton">
-            <i data-lucide="menu" class="h-6 w-6 text-gray-600"></i>
+            <i data-lucide="menu" class="h-6 w-6 text-gray-600 hover:text-blue-600 transition-colors duration-300"></i>
         </button>
     </div>
 
     <!-- Mobile Menu (hidden by default) -->
-    <div class="md:hidden hidden bg-white" id="mobileMenu">
+    <div class="md:hidden hidden bg-white shadow-lg" id="mobileMenu">
         <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
-            <a href="/" class="py-2 text-gray-600 hover:text-gray-900">Accueil</a>
-            <a href="{{ route('stage.formulaire') }}" class="text-gray-600 hover:text-gray-900">Demande</a>
-            <a href="{{ route('login') }}" class="py-2 text-gray-600 hover:text-gray-900">Connexion</a>
+            <a href="/" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Accueil</span>
+            </a>
+            <a href="{{ route('stage.formulaire') }}" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Demande</span>
+            </a>
+            <a href="{{ route('login') }}" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Connexion</span>
+            </a>
         </div>
     </div>
 </header>
@@ -28,5 +43,45 @@
     document.getElementById('mobileMenuButton')?.addEventListener('click', function() {
         const menu = document.getElementById('mobileMenu');
         menu.classList.toggle('hidden');
+        
+        const icon = this.querySelector('i');
+        if (menu.classList.contains('hidden')) {
+            lucide.createIcons(); // Réinitialise l'icône menu
+        } else {
+            icon.setAttribute('data-lucide', 'x');
+            lucide.createIcons(); // Change pour l'icône fermer
+        }
+    });
+
+    // Animation au survol pour desktop
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            link.querySelector('span:last-child').style.width = '100%';
+        });
+        link.addEventListener('mouseleave', () => {
+            link.querySelector('span:last-child').style.width = '0';
+        });
     });
 </script>
+
+<style>
+    .nav-link {
+        padding: 0.5rem 0;
+        display: inline-block;
+        position: relative;
+    }
+    
+    .mobile-nav-link:hover {
+        transform: translateX(5px);
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .nav-link:hover span:first-child {
+        animation: pulse 0.5s ease;
+    }
+</style>
