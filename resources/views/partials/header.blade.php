@@ -3,26 +3,29 @@
         <div class="flex items-center">
             <a href="/" class="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors duration-300">MASM Stages</a>
         </div>
-        <nav class="hidden md:flex space-x-8">
+        <nav class="hidden md:flex space-x-6 items-center"> <!-- Réduit l'espacement entre les liens -->
             <a href="/" class="nav-link group relative">
                 <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Accueil</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
             </a>
-            <a href="{{ route('stage.formulaire') }}" class="nav-link group relative">
+
+            <a href="{{ route('login') }}" class="nav-link group relative">
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Espace stagiaires</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+            </a>
+
+            <!-- Bouton "Demande" réduit -->
+            <x-glass-button scrollTo="apply" class="nav-link group relative px-3 py-1 text-sm"> <!-- Taille réduite -->
                 <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Demande</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-            </a>
-            <a href="{{ route('login') }}" class="nav-link group relative">
-                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Connexion</span>
-                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
-            </a>
+            </x-glass-button>
         </nav>
         <button class="md:hidden focus:outline-none" id="mobileMenuButton">
             <i data-lucide="menu" class="h-6 w-6 text-gray-600 hover:text-blue-600 transition-colors duration-300"></i>
         </button>
     </div>
 
-    <!-- Mobile Menu (hidden by default) -->
+    <!-- Mobile Menu (identique) -->
     <div class="md:hidden hidden bg-white shadow-lg" id="mobileMenu">
         <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
             <a href="/" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
@@ -32,28 +35,28 @@
                 <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Demande</span>
             </a>
             <a href="{{ route('login') }}" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
-                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Connexion</span>
+                <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Espace stagiaires</span>
             </a>
         </div>
     </div>
 </header>
 
 <script>
-    // Gestion du menu mobile
+    // Gestion du menu mobile (identique)
     document.getElementById('mobileMenuButton')?.addEventListener('click', function() {
         const menu = document.getElementById('mobileMenu');
         menu.classList.toggle('hidden');
         
         const icon = this.querySelector('i');
         if (menu.classList.contains('hidden')) {
-            lucide.createIcons(); // Réinitialise l'icône menu
+            lucide.createIcons();
         } else {
             icon.setAttribute('data-lucide', 'x');
-            lucide.createIcons(); // Change pour l'icône fermer
+            lucide.createIcons();
         }
     });
 
-    // Animation au survol pour desktop
+    // Animation au survol pour desktop (identique)
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('mouseenter', () => {
             link.querySelector('span:last-child').style.width = '100%';
@@ -66,7 +69,7 @@
 
 <style>
     .nav-link {
-        padding: 0.5rem 0;
+        padding: 0.3rem 0; /* Padding réduit */
         display: inline-block;
         position: relative;
     }
