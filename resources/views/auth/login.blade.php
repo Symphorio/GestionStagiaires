@@ -111,7 +111,7 @@
                 </div>
                 
                 <div x-show="activeTab === 'register'" class="animate-fade-in">
-                    @include('auth.register-form')
+                    @include('auth.register')
                     
                     <div class="mt-6 text-center">
                         <p class="text-sm text-gray-500">
@@ -132,10 +132,15 @@
     @include('partials.footer')
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script>
-        // Initialiser les icônes Lucide
-        lucide.createIcons();
-    </script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('formSubmit', () => ({
+        submitForm(form) {
+            this.isSubmitting = true;
+            form.submit();
+        }
+    }));
+});
+</script>
 </body>
 </html>

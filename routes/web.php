@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StageController;
+use App\Http\Controllers\CompteStagiaireController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -17,6 +19,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Routes d'authentification Jetstream (le fichier existe par défaut)
+//
+
+// Routes protégées
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -26,22 +32,41 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 });
+//require __DIR__.'/auth.php';
 
 // Routes pour la gestion des stages
 Route::prefix('stages')->group(function () {
-    // Route pour afficher le formulaire
+    // Formulaire de demande
     Route::get('/formulaire', [StageController::class, 'afficherFormulaire'])
          ->name('stage.formulaire');
     
-    // Route pour traiter la soumission du formulaire
-Route::post('/demande-de-stage', [StageController::class, 'soumettreFormulaire'])->name('stage.soumettre');
+    // Soumission de demande
+    Route::post('/demande-de-stage', [StageController::class, 'soumettreFormulaire'])
+         ->name('stage.soumettre');
     
     // Espace stagiaire
-    Route::get('/espace', [StageController::class, 'espace'])->name('stage.espace')
-         ->middleware('auth'); // Protection si besoin
+    Route::get('/espace', [StageController::class, 'espace'])
+         ->name('stage.espace');
 });
 
-// Route de fallback pour les pages non trouvées
+// Routes pour la finalisation des comptes stagiaires
+Route::prefix('compte')->group(function () {
+    // Version temporaire sans ID
+    Route::get('/inscription', [CompteStagiaireController::class, 'showRegistrationForm'])
+         ->name('stagiaire.inscription');
+    
+    Route::post('/inscription', [CompteStagiaireController::class, 'register'])
+         ->name('stagiaire.finaliser');
+
+    // Conservez les routes originales (commentées pour l'instant)
+    // Route::get('/finaliser/{intern_id}', [CompteStagiaireController::class, 'showRegistrationFormWithId'])
+    //      ->name('stagiaire.finalisation');
+    // Route::post('/finaliser/{intern_id}', [CompteStagiaireController::class, 'registerWithId'])
+    //      ->name('stagiaire.finaliser');
+});
+
+
+// Route de fallback
 Route::fallback(function () {
-    return redirect()->route('home');
+    return redirect('/');
 });

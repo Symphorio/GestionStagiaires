@@ -1,60 +1,120 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+<!-- resources/views/auth/register.blade.php -->
+<div class="glass-card w-full max-w-md mx-auto p-8 animate-scale-in">
+    <h2 class="text-2xl font-medium mb-6 text-center">Création de Compte Stagiaire</h2>
+    
+    <form method="POST" action="{{ route('stagiaire.finaliser') }}" class="space-y-6">
+        @csrf
 
-        <x-validation-errors class="mb-4" />
+        <div class="space-y-2">
+            <label for="email" class="text-sm font-medium">Email</label>
+            <input 
+                type="email"
+                id="email"
+                name="email"
+                value="{{ old('email') }}"
+                class="focus-ring w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="votre.email@exemple.com"
+                required
+            />
+            <p class="text-xs text-gray-500 mt-1">Utilisez le même email que dans votre demande de stage</p>
+            @error('email')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        
+        <!--<div class="space-y-2">
+            <label for="intern_id" class="text-sm font-medium">ID Stagiaire</label>
+            <input 
+                type="text"
+                id="intern_id"
+                name="intern_id"
+                value="{{ old('intern_id') }}"
+                class="focus-ring w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="ID reçu par email"
+                required
+            />
+            <p class="text-xs text-gray-500 mt-1">L'identifiant unique fourni dans l'email d'acceptation</p>
+            @error('intern_id')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>-->
+        
+        <div class="space-y-2">
+            <label for="password" class="text-sm font-medium">Mot de passe</label>
+            <input 
+                type="password"
+                id="password"
+                name="password"
+                class="focus-ring w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Créez un mot de passe"
+                required
+            />
+            @error('password')
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        
+        <div class="space-y-2">
+            <label for="password_confirmation" class="text-sm font-medium">Confirmer le mot de passe</label>
+            <input 
+                type="password"
+                id="password_confirmation"
+                name="password_confirmation"
+                class="focus-ring w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Confirmez votre mot de passe"
+                required
+            />
+        </div>
+        
+        <button 
+    type="submit" 
+    class="w-full glass-button hover-scale flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+    x-data="{ isSubmitting: false }"
+    @click.prevent="isSubmitting = true; $nextTick(() => { $event.target.closest('form').submit(); })"
+    :disabled="isSubmitting"
+>
+    <!-- Icônes et texte restent identiques -->
+    <template x-if="isSubmitting">
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <!-- ... -->
+        </svg>
+    </template>
+    <template x-if="!isSubmitting">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- ... -->
+        </svg>
+    </template>
+    <span x-text="isSubmitting ? 'Création en cours...' : 'Créer mon compte'"></span>
+</button>
+    </form>
+</div>
 
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
-
-            <div>
-                <x-label for="name" value="{{ __('Name') }}" />
-                <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
-                <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
-            </div>
-
-            @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
-                <div class="mt-4">
-                    <x-label for="terms">
-                        <div class="flex items-center">
-                            <x-checkbox name="terms" id="terms" required />
-
-                            <div class="ms-2">
-                                {!! __('I agree to the :terms_of_service and :privacy_policy', [
-                                        'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">'.__('Terms of Service').'</a>',
-                                        'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">'.__('Privacy Policy').'</a>',
-                                ]) !!}
-                            </div>
-                        </div>
-                    </x-label>
-                </div>
-            @endif
-
-            <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                    {{ __('Already registered?') }}
-                </a>
-
-                <x-button class="ms-4">
-                    {{ __('Register') }}
-                </x-button>
-            </div>
-        </form>
-    </x-authentication-card>
-</x-guest-layout>
+<!-- Styles (à inclure dans votre fichier CSS) -->
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+    }
+    
+    .hover-scale:hover {
+        transform: scale(1.02);
+        transition: transform 0.3s ease;
+    }
+    
+    .focus-ring:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+    
+    @keyframes scaleIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    
+    .animate-scale-in {
+        animation: scaleIn 0.3s ease-out forwards;
+    }
+</style>

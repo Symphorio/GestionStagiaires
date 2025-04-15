@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('stagiaires', function (Blueprint $table) {
             $table->id();
+            $table->string('nom');
+            $table->string('prenom');
+            $table->string('email')->unique();
+            $table->string('intern_id')->unique(); // Code de validation
+            $table->string('password');
+            $table->boolean('is_validated')->default(false);
+            $table->rememberToken();
             $table->timestamps();
         });
     }
