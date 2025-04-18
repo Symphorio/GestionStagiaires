@@ -1,10 +1,9 @@
 <?php
 // app/Http/Controllers/Auth/RegisterController.php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Stagiaire; // <-- Utilise Stagiaire au lieu de User
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -19,19 +18,28 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'email' => 'required|string|email|max:255|unique:users',
-            'intern_id' => 'required|string|unique:users',
+            'nom' => 'required|string|max:255', // <-- Ajouté
+            'prenom' => 'required|string|max:255', // <-- Ajouté
+            'email' => 'required|string|email|max:255|unique:stagiaires', // <-- Changé (users → stagiaires)
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
+        // Génération automatique de l'intern_id
+        $intern_id = Stagiaire::generateInternId();
+
+        $stagiaire = Stagiaire::create([
+            'nom' => $request->nom,
+            'prenom' => $request->prenom,
             'email' => $request->email,
-            'intern_id' => $request->intern_id,
+            'intern_id' => $intern_id, // <-- Généré automatiquement
             'password' => Hash::make($request->password),
+            'role_id' => 1, // <-- Valeur par défaut (à ajuster si besoin)
         ]);
 
-        // Vous pouvez ajouter ici l'envoi d'email ou la connexion automatique
+        // Connexion automatique du stagiaire
+        auth('stagiaire')->login($stagiaire);
 
-        return redirect()->route('login')->with('success', 'Compte créé avec succès! Vous pouvez maintenant vous connecter.');
+        // Redirection vers le dashboard stagiaire
+        return redirect()->route('stagiaire.dashboard');
     }
 }

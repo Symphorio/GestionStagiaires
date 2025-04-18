@@ -2,7 +2,7 @@
 <div class="glass-card w-full max-w-md mx-auto p-8 animate-scale-in">
     <h2 class="text-2xl font-medium mb-6 text-center">Connexion Stagiaire</h2>
     
-    <form method="POST" action="{{ route('login') }}" class="space-y-6">
+    <form method="POST" action="{{ route('login.submit') }}" class="space-y-6">
         @csrf
         
         <div class="space-y-2">
@@ -53,13 +53,12 @@
             @enderror
         </div>
         
-        <button 
-            type="submit" 
-            class="w-full glass-button hover-scale flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-            :disabled="isSubmitting"
-            x-data="{ isSubmitting: false }"
-            @click="isSubmitting = true"
-        >
+        <<button 
+    type="submit" 
+    class="w-full glass-button hover-scale flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+    x-data="{ isSubmitting: false }"
+    @click="isSubmitting = true; $event.target.form.submit()"
+>
             <template x-if="isSubmitting">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

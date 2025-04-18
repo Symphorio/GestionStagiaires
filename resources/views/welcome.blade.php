@@ -108,7 +108,7 @@
                    Demander un Stage
                 </x-glass-button>
                 
-                <a href="{{ route('login') }}" 
+                <a href="{{ route('login.submit') }}" 
                    class="hover-scale px-6 py-3 rounded-lg font-medium border border-gray-300 hover:bg-gray-100 transition-all">
                    Espace Stagiaire
                 </a>

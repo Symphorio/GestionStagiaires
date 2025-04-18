@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Auth/LoginController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -9,36 +8,51 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    /**
+     * Affiche le formulaire de connexion unique
+     */
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
+    /**
+     * Traite la connexion pour tous les types d'utilisateurs
+     */
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required',
-            'intern_id' => 'required|string',
+            'password' => 'required'
         ]);
 
-        $credentials = $request->only('email', 'password');
-
-        if (Auth::attempt($credentials)) {
-            // Vérification supplémentaire de l'ID stagiaire
-            $user = Auth::user();
-            if ($user->intern_id === $request->intern_id) {
-                return redirect()->intended('intern-dashboard');
-            }
-            
-            Auth::logout();
-            return back()->withErrors([
-                'intern_id' => 'ID stagiaire incorrect',
-            ])->withInput();
+        // Essai de connexion pour chaque guard
+        if (Auth::guard('stagiaire')->attempt($credentials)) {
+            return redirect()->route('stagiaire.dashboard');
         }
 
+        if (Auth::guard('dpaf')->attempt($credentials)) {
+            return redirect()->route('dpaf.dashboard');
+        }
+
+        if (Auth::guard('tuteur')->attempt($credentials)) {
+            return redirect()->route('tuteur.dashboard');
+        }
+
+        // Si aucun guard ne fonctionne
         return back()->withErrors([
-            'email' => 'Les identifiants sont incorrects',
-        ])->withInput();
+            'email' => 'Identifiants incorrects ou compte inexistant',
+        ]);
+    }
+
+    /**
+     * Déconnexion pour tous les utilisateurs
+     */
+    public function logout(Request $request)
+    {
+        Auth::logout(); // Déconnecte de tous les guards
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
     }
 }

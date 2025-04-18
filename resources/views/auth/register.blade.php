@@ -2,9 +2,33 @@
 <div class="glass-card w-full max-w-md mx-auto p-8 animate-scale-in">
     <h2 class="text-2xl font-medium mb-6 text-center">Création de Compte Stagiaire</h2>
     
-    <form method="POST" action="{{ route('stagiaire.finaliser') }}" class="space-y-6">
+    <form method="POST" action="{{ route('register.submit') }}" class="space-y-6">
         @csrf
+        <div class="space-y-2">
+    <label for="nom" class="text-sm font-medium">Nom</label>
+    <input 
+        type="text"
+        id="nom"
+        name="nom"
+        value="{{ old('nom') }}"
+        class="focus-ring w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Votre nom"
+        required
+    />
+</div>
 
+<div class="space-y-2">
+    <label for="prenom" class="text-sm font-medium">Prénom</label>
+    <input 
+        type="text"
+        id="prenom"
+        name="prenom"
+        value="{{ old('prenom') }}"
+        class="focus-ring w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Votre prénom"
+        required
+    />
+</div>
         <div class="space-y-2">
             <label for="email" class="text-sm font-medium">Email</label>
             <input 

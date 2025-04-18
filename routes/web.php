@@ -3,26 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\CompteStagiaireController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+use App\Http\Controllers\TableauDeBordStagiaireController;
+use App\Http\Controllers\Auth\LoginController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Routes d'authentification Jetstream (le fichier existe par défaut)
-//
-
-// Routes protégées
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -32,41 +19,49 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 });
-//require __DIR__.'/auth.php';
 
-// Routes pour la gestion des stages
+// Routes publiques
 Route::prefix('stages')->group(function () {
-    // Formulaire de demande
-    Route::get('/formulaire', [StageController::class, 'afficherFormulaire'])
-         ->name('stage.formulaire');
-    
-    // Soumission de demande
-    Route::post('/demande-de-stage', [StageController::class, 'soumettreFormulaire'])
-         ->name('stage.soumettre');
-    
-    // Espace stagiaire
-    Route::get('/espace', [StageController::class, 'espace'])
-         ->name('stage.espace');
+    Route::get('/formulaire', [StageController::class, 'afficherFormulaire'])->name('stage.formulaire');
+    Route::post('/demande-de-stage', [StageController::class, 'soumettreFormulaire'])->name('stage.soumettre');
 });
 
-// Routes pour la finalisation des comptes stagiaires
-Route::prefix('compte')->group(function () {
-    // Version temporaire sans ID
-    Route::get('/inscription', [CompteStagiaireController::class, 'showRegistrationForm'])
-         ->name('stagiaire.inscription');
+// Routes d'authentification unifiées
+Route::middleware('guest')->group(function () {
+    // Inscription
+    Route::get('/register', [CompteStagiaireController::class, 'showRegistrationForm'])->name('register.form');
+    Route::post('/register', [CompteStagiaireController::class, 'register'])->name('register.submit');
     
-    Route::post('/inscription', [CompteStagiaireController::class, 'register'])
-         ->name('stagiaire.finaliser');
-
-    // Conservez les routes originales (commentées pour l'instant)
-    // Route::get('/finaliser/{intern_id}', [CompteStagiaireController::class, 'showRegistrationFormWithId'])
-    //      ->name('stagiaire.finalisation');
-    // Route::post('/finaliser/{intern_id}', [CompteStagiaireController::class, 'registerWithId'])
-    //      ->name('stagiaire.finaliser');
+   // Authentification unique
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 });
 
+// Déconnexion
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Route de fallback
+// Espace stagiaire
+Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->group(function() {
+    Route::get('/dashboard', [TableauDeBordStagiaireController::class, 'dashboard'])->name('dashboard');
+
+    Route::get('/taches', [TableauDeBordStagiaireController::class, 'taches'])->name('taches');
+    Route::patch('/taches/{task}/status', [TableauDeBordStagiaireController::class, 'updateTaskStatus'])->name('taches.update-status');
+    Route::get('/rapports', [TableauDeBordStagiaireController::class, 'rapports'])->name('rapports');
+    Route::get('/memoire', [TableauDeBordStagiaireController::class, 'memoire'])->name('memoire');
+    Route::get('/calendrier', [TableauDeBordStagiaireController::class, 'calendrier'])->name('calendrier');
+    Route::get('/profil', [TableauDeBordStagiaireController::class, 'profil'])->name('profil');
+    Route::get('/parametres', [TableauDeBordStagiaireController::class, 'parametres'])->name('parametres');
+});
+
+// Autres espaces (DPAF, Tuteur)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        return auth()->user()->hasRole('stagiaire') 
+            ? redirect()->route('stagiaire.dashboard')
+            : view('dashboard');
+    })->name('dashboard');
+});
+
 Route::fallback(function () {
     return redirect('/');
 });
