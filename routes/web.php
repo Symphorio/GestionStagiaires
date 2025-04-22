@@ -47,6 +47,7 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->
     Route::get('/taches', [TableauDeBordStagiaireController::class, 'taches'])->name('taches');
     Route::patch('/taches/{task}/status', [TableauDeBordStagiaireController::class, 'updateTaskStatus'])->name('taches.update-status');
     Route::get('/rapports', [TableauDeBordStagiaireController::class, 'rapports'])->name('rapports');
+    Route::post('/rapports/upload', [TableauDeBordStagiaireController::class, 'uploadRapport'])->name('rapports.upload');
     Route::get('/memoire', [TableauDeBordStagiaireController::class, 'memoire'])->name('memoire');
     Route::get('/calendrier', [TableauDeBordStagiaireController::class, 'calendrier'])->name('calendrier');
     Route::get('/profil', [TableauDeBordStagiaireController::class, 'profil'])->name('profil');

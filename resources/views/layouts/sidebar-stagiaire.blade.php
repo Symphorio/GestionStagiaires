@@ -10,7 +10,7 @@
         <ul class="space-y-2">
             <li>
                 <a href="{{ route('stagiaire.dashboard') }}" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.tableau-de-bord') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.dashboard') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">
                     <i data-lucide="home" class="h-5 w-5"></i>
                     <span>Tableau de bord</span>
                 </a>
@@ -18,7 +18,7 @@
             <li>
                 <a href="{{ route('stagiaire.taches') }}" 
                    class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.taches') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">
-                    <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                    <i data-lucide="list-checks" class="h-5 w-5"></i>
                     <span>Tâches</span>
                 </a>
             </li>
@@ -60,10 +60,10 @@
         </ul>
     </nav>
     
-    <div class="p-4 border-t border-gray-200 absolute bottom-0 w-64">
+    <div class="p-4 border-t border-gray-200">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="w-full flex items-center justify-start px-4 py-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg border border-red-200">
+            <button type="submit" class="w-full flex items-center justify-start px-4 py-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg">
                 <i data-lucide="log-out" class="h-4 w-4 mr-2"></i>
                 Déconnexion
             </button>
