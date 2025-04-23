@@ -197,3 +197,8 @@ body {
   backdrop-filter: blur(16px);
 }
 
+.blur-effect {
+  backdrop-filter: blur(4px); /* Intensité du flou */
+  background: rgba(255, 255, 255, 0.7); /* Opacité du fond */
+  transition: opacity 0.3s ease; /* Durée de l'animation */
+}

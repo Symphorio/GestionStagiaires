@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Stagiaire;
 
 class LoginController extends Controller
 {
@@ -13,11 +14,12 @@ class LoginController extends Controller
      */
     public function showLoginForm()
     {
-        return view('auth.login');
+        return view('auth.login'); // Gardez la même vue pour tous les types de connexion
     }
 
     /**
      * Traite la connexion pour tous les types d'utilisateurs
+     * (mais n'utilise que le modèle Stagiaire pour l'instant)
      */
     public function login(Request $request)
     {
@@ -26,16 +28,17 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
-        // Essai de connexion pour chaque guard
+        // Essai de connexion uniquement avec le guard stagiaire
         if (Auth::guard('stagiaire')->attempt($credentials)) {
             return redirect()->route('stagiaire.dashboard');
         }
 
-        if (Auth::guard('dpaf')->attempt($credentials)) {
+        // Gardez ces conditions pour plus tard si vous activez dpaf/tuteur
+        if (false && Auth::guard('dpaf')->attempt($credentials)) {
             return redirect()->route('dpaf.dashboard');
         }
 
-        if (Auth::guard('tuteur')->attempt($credentials)) {
+        if (false && Auth::guard('tuteur')->attempt($credentials)) {
             return redirect()->route('tuteur.dashboard');
         }
 

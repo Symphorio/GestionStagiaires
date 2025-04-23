@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Memoire extends Model
 {
     use HasFactory;
+
+    public function stagiaire()
+{
+    return $this->belongsTo(Stagiaire::class);
+}
 }

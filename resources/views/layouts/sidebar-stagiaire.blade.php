@@ -30,12 +30,12 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('stagiaire.memoire') }}" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.memoire') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">
-                    <i data-lucide="book-open" class="h-5 w-5"></i>
-                    <span>Mémoire</span>
-                </a>
-            </li>
+    <a href="{{ route('stagiaire.soumission-memoire') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.soumission-memoire') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">
+        <i data-lucide="book-open" class="h-5 w-5"></i>
+        <span>Mémoire</span>
+    </a>
+</li>
             <li>
                 <a href="{{ route('stagiaire.calendrier') }}" 
                    class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.calendrier') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">

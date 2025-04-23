@@ -7,5 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Rapport extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'stagiaire_id',
+        'file_path', 
+        'comments',
+        'submitted_at' // ou 'created_at'
+    ];
+
+    public function stagiaire()
+{
+    return $this->belongsTo(Stagiaire::class);
+}
 }
