@@ -1,3 +1,4 @@
+// Remettez la configuration de base
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 
@@ -10,5 +11,5 @@ export default defineConfig({
             ],
             refresh: true,
         }),
-    ],
+    ]
 });

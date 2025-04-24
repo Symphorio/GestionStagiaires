@@ -1,4 +1,3 @@
-{{-- resources/views/stagiaire/calendrier.blade.php --}}
 @extends('layouts.stagiaire')
 
 @section('content')
@@ -36,11 +35,22 @@
                     <h2 class="text-lg font-semibold">Calendrier des Activités</h2>
                     <p class="text-gray-500 mb-4">Cliquez sur une date pour voir les événements</p>
                     
-                    <div id="calendrier"
-                         data-evenements='{!! $evenementsJSON !!}'
-                         data-route="{{ route('stagiaire.calendrier') }}"
-                         data-filtre-type="{{ $filtreType }}">
-                    </div>
+                    <div id="calendar" class="min-h-[500px]"></div>
+                    
+                    <!-- FullCalendar CSS -->
+                    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+                    <style>
+                        .fc-toolbar-title {
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                        }
+                        .fc-daygrid-day-number {
+                            color: #4b5563;
+                        }
+                        .fc-day-today {
+                            background-color: #f3f4f6 !important;
+                        }
+                    </style>
                 </div>
                 <div class="px-6 py-4 border-t flex items-center justify-between text-sm text-gray-500">
                     <div class="flex items-center space-x-4">
@@ -49,7 +59,7 @@
                             <span>Événement programmé</span>
                         </div>
                         <div class="flex items-center">
-                            <span class="inline-block w-2 h-2 mr-1 rounded-full bg-gray-500"></span>
+                            <span class="inline-block w-2 h-2 mr-1 rounded-full bg-gray-300"></span>
                             <span>Aujourd'hui</span>
                         </div>
                     </div>
@@ -69,7 +79,7 @@
                                     <div class="flex items-center justify-between">
                                         <h3 class="font-medium">{{ $evenement->titre }}</h3>
                                         <span class="px-2 py-1 text-xs rounded-full" style="background-color: {{ $evenement->couleur }}; color: white;">
-                                            {{ $this->formatEventType($evenement->type) }}
+                                            {{ $evenement->type_formatted }}
                                         </span>
                                     </div>
                                     @if($evenement->description)
@@ -105,11 +115,11 @@
                                 <div class="flex items-center justify-between">
                                     <h3 class="font-medium">{{ $evenement->titre }}</h3>
                                     <span class="px-2 py-1 text-xs rounded-full" style="background-color: {{ $evenement->couleur }}; color: white;">
-                                        {{ $this->formatEventType($evenement->type) }}
+                                        {{ $evenement->type_formatted }}
                                     </span>
                                 </div>
                                 <div class="mt-2 flex items-center justify-between">
-                                    <p class="text-sm text-gray-500">{{ Carbon::parse($evenement->date_debut)->isoFormat('LL') }}</p>
+                                    <p class="text-sm text-gray-500">{{ $evenement->date_debut->isoFormat('LL') }}</p>
                                     <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -157,58 +167,105 @@
     </div>
 </div>
 
-@push('scripts')
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/fr.min.js'></script>
 <script>
-    // Initialisation du calendrier
-    document.addEventListener('DOMContentLoaded', function() {
-        const calendrierEl = document.getElementById('calendrier');
-        if (calendrierEl) {
-            const calendrier = new FullCalendar.Calendar(calendrierEl, {
-                plugins: [dayGridPlugin, interactionPlugin],
-                initialView: 'dayGridMonth',
-                locale: 'fr',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth'
-                },
-                events: JSON.parse(calendrierEl.dataset.evenements),
-                dateClick: function(info) {
-                    window.location.href = calendrierEl.dataset.route + 
-                        "?date=" + info.dateStr + 
-                        "&vue=mois&filtre_type=" + calendrierEl.dataset.filtreType;
-                },
-                eventClick: function(info) {
-                    afficherDetailsEvenement(info.event.id);
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'fr',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,dayGridWeek,dayGridDay'
+        },
+        buttonText: {
+            today: 'Aujourd\'hui',
+            month: 'Mois',
+            week: 'Semaine',
+            day: 'Jour'
+        },
+        events: [
+            @foreach($evenements as $event)
+            {
+                title: '{{ $event->titre }}',
+                start: '{{ $event->date_debut }}',
+                @if($event->date_fin)
+                end: '{{ $event->date_fin }}',
+                @endif
+                color: '{{ $event->couleur }}',
+                extendedProps: {
+                    description: `{{ $event->description }}`,
+                    type: "{{ $event->type_formatted }}"
                 }
-            });
-            calendrier.render();
+            },
+            @endforeach
+        ],
+        dateClick: function(info) {
+            window.location.href = "{{ route('stagiaire.calendrier') }}?date=" + 
+                info.dateStr + "&vue=mois&filtre_type={{ $filtreType }}";
+        },
+        eventClick: function(info) {
+            const event = info.event;
+            document.getElementById('modalTitre').textContent = event.title;
+            document.getElementById('modalDate').textContent = 
+                event.start.toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            document.getElementById('modalDescription').textContent = 
+                event.extendedProps.description || 'Pas de description';
+            
+            const badge = document.getElementById('modalBadge');
+            badge.textContent = event.extendedProps.type;
+            badge.style.backgroundColor = event.backgroundColor;
+            badge.style.color = 'white';
+            
+            document.getElementById('modalEvenement').classList.remove('hidden');
+            
+            info.jsEvent.preventDefault();
         }
     });
 
-    function afficherDetailsEvenement(evenementId) {
-        fetch(`{{ route('stagiaire.calendrier.details', '') }}/${evenementId}`)
-            .then(response => response.json())
-            .then(evenement => {
-                document.getElementById('modalTitre').textContent = evenement.titre;
-                document.getElementById('modalDate').textContent = 
-                    new Date(evenement.date).toLocaleDateString('fr-FR', { 
-                        day: 'numeric', 
-                        month: 'long', 
-                        year: 'numeric' 
-                    });
-                document.getElementById('modalDescription').textContent = 
-                    evenement.description || '';
-                
-                const badge = document.getElementById('modalBadge');
-                badge.textContent = evenement.type_formatted;
-                badge.className = 'px-2 py-1 text-xs rounded-full';
-                badge.style.backgroundColor = evenement.couleur;
-                badge.style.color = 'white';
-                
-                document.getElementById('modalEvenement').classList.remove('hidden');
-            });
-    }
+    calendar.render();
+});
+
+function afficherDetailsEvenement(evenementId) {
+    fetch(`{{ route('stagiaire.calendrier.details', '') }}/${evenementId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur réseau');
+            }
+            return response.json();
+        })
+        .then(evenement => {
+            document.getElementById('modalTitre').textContent = evenement.titre;
+            document.getElementById('modalDate').textContent = 
+                new Date(evenement.date_debut).toLocaleDateString('fr-FR', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+            document.getElementById('modalDescription').textContent = 
+                evenement.description || '';
+            
+            const badge = document.getElementById('modalBadge');
+            badge.textContent = evenement.type_formatted;
+            badge.className = 'px-2 py-1 text-xs rounded-full';
+            badge.style.backgroundColor = evenement.couleur;
+            badge.style.color = 'white';
+            
+            document.getElementById('modalEvenement').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Impossible de charger les détails de l\'événement');
+        });
+}
 </script>
-@endpush
 @endsection

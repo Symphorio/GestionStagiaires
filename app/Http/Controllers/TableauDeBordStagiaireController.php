@@ -108,78 +108,39 @@ class TableauDeBordStagiaireController extends Controller
         
         $filtreType = $request->input('filtre_type', 'tous');
         $vue = $request->input('vue', 'mois');
-        $dateSelectionnee = $request->date ? Carbon::parse($request->date) : now();
+        $dateStr = $request->input('date', now()->format('Y-m-d'));
+        
+        try {
+            $dateSelectionnee = Carbon::parse($dateStr);
+        } catch (\Exception $e) {
+            $dateSelectionnee = now();
+        }
 
-        $evenements = $this->prepareCalendarEvents($stagiaireId, $filtreType);
-        $evenementsPourDate = $this->filterEventsForDate($evenements, $dateSelectionnee);
+        $query = Evenement::where('stagiaire_id', $stagiaireId)
+            ->orderBy('date_debut', 'asc');
+
+        if ($filtreType !== 'tous') {
+            $query->where('type', $filtreType);
+        }
+
+        $evenements = $query->get();
+        
+        // Formatage des types d'événements
+        $evenements->each(function ($event) {
+            $event->type_formatted = $this->formatEventType($event->type);
+        });
+
+        $evenementsPourDate = $evenements->filter(function ($event) use ($dateSelectionnee) {
+            return Carbon::parse($event->date_debut)->isSameDay($dateSelectionnee);
+        });
 
         return view('stagiaire.calendrier', [
             'evenements' => $evenements,
             'evenementsPourDate' => $evenementsPourDate,
             'dateSelectionnee' => $dateSelectionnee,
             'vue' => $vue,
-            'filtreType' => $filtreType,
-            'evenementsJSON' => $this->prepareEventsJSON($evenements)
+            'filtreType' => $filtreType
         ]);
-    }
-
-    /**
-     * Prépare les événements pour le calendrier
-     */
-    protected function prepareCalendarEvents($stagiaireId, $filtreType)
-    {
-        $query = Evenement::where('stagiaire_id', $stagiaireId);
-        
-        if ($filtreType !== 'tous') {
-            $query->where('type', $filtreType);
-        }
-
-        return $query->get();
-    }
-
-    /**
-     * Filtre les événements pour une date spécifique
-     */
-    protected function filterEventsForDate($evenements, $date)
-    {
-        return $evenements->filter(function ($evenement) use ($date) {
-            return Carbon::parse($evenement->date_debut)->isSameDay($date);
-        });
-    }
-
-    /**
-     * Prépare les événements au format JSON pour FullCalendar
-     */
-    protected function prepareEventsJSON($evenements)
-    {
-        return $evenements->map(function ($evenement) {
-            return [
-                'id' => $evenement->id,
-                'title' => $evenement->titre,
-                'start' => $evenement->date_debut,
-                'end' => $evenement->date_fin,
-                'color' => $evenement->couleur,
-                'extendedProps' => [
-                    'description' => $evenement->description,
-                    'typeFormatted' => $this->formatEventType($evenement->type)
-                ]
-            ];
-        })->toJson();
-    }
-
-    /**
-     * Formatte le type d'événement pour l'affichage
-     */
-    protected function formatEventType($type)
-    {
-        $types = [
-            'echeance' => 'Échéance',
-            'reunion' => 'Réunion',
-            'formation' => 'Formation',
-            'ferie' => 'Jour férié'
-        ];
-
-        return $types[$type] ?? $type;
     }
 
     /**
@@ -196,12 +157,27 @@ class TableauDeBordStagiaireController extends Controller
         return response()->json([
             'id' => $evenement->id,
             'titre' => $evenement->titre,
-            'date' => $evenement->date_debut,
+            'date_debut' => $evenement->date_debut,
             'type' => $evenement->type,
             'type_formatted' => $this->formatEventType($evenement->type),
             'couleur' => $evenement->couleur,
             'description' => $evenement->description
         ]);
+    }
+
+    /**
+     * Formatte le type d'événement pour l'affichage
+     */
+    protected function formatEventType($type)
+    {
+        $types = [
+            'echeance' => 'Échéance',
+            'reunion' => 'Réunion',
+            'formation' => 'Formation',
+            'ferie' => 'Jour férié'
+        ];
+
+        return $types[$type] ?? $type;
     }
 
     /**
@@ -382,6 +358,11 @@ class TableauDeBordStagiaireController extends Controller
                              ->orderBy('date_debut', 'asc')
                              ->get();
 
+        // Formatage des types pour la vue liste
+        $evenements->each(function ($event) {
+            $event->type_formatted = $this->formatEventType($event->type);
+        });
+
         return view('stagiaire.evenements.index', compact('evenements'));
     }
 
@@ -498,5 +479,22 @@ class TableauDeBordStagiaireController extends Controller
 
         return redirect()->route('stagiaire.evenements')
                         ->with('success', 'Événement supprimé avec succès');
+    }
+
+    /**
+     * Affiche le profil du stagiaire
+     */
+    public function profil()
+    {
+        $stagiaire = auth('stagiaire')->user();
+        return view('stagiaire.profil', compact('stagiaire'));
+    }
+
+    /**
+     * Affiche les paramètres du stagiaire
+     */
+    public function parametres()
+    {
+        return view('stagiaire.parametres');
     }
 }

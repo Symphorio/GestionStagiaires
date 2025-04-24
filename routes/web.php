@@ -43,7 +43,6 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // Espace stagiaire
 Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->group(function() {
     Route::get('/dashboard', [TableauDeBordStagiaireController::class, 'dashboard'])->name('dashboard');
-
     Route::get('/taches', [TableauDeBordStagiaireController::class, 'taches'])->name('taches');
     Route::patch('/taches/{task}/status', [TableauDeBordStagiaireController::class, 'updateTaskStatus'])->name('taches.update-status');
     Route::get('/rapports', [TableauDeBordStagiaireController::class, 'rapports'])->name('rapports');
@@ -51,11 +50,8 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->
     Route::get('/soumission-memoire', [TableauDeBordStagiaireController::class, 'afficherSoumissionMemoire'])->name('soumission-memoire');
     Route::post('/soumettre-memoire', [TableauDeBordStagiaireController::class, 'soumettreMemoire'])->name('soumettre-memoire');
     Route::get('/telecharger-memoire/{id}', [TableauDeBordStagiaireController::class, 'telechargerMemoire'])->name('telecharger-memoire');
-    Route::get('/calendrier', [TableauDeBordStagiaireController::class, 'calendrier'])
-         ->name('calendrier');
-         
-    Route::get('/api/calendrier/{evenement}', [TableauDeBordStagiaireController::class, 'getEventDetails'])
-         ->name('calendrier.details');
+    Route::get('/calendrier', [TableauDeBordStagiaireController::class, 'calendrier'])->name('calendrier');
+    Route::get('/calendrier/details/{id}', [TableauDeBordStagiaireController::class, 'getEventDetails'])->name('calendrier.details');
     Route::get('/profil', [TableauDeBordStagiaireController::class, 'profil'])->name('profil');
     Route::get('/parametres', [TableauDeBordStagiaireController::class, 'parametres'])->name('parametres');
 });
