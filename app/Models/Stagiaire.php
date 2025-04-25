@@ -46,4 +46,15 @@ class Stagiaire extends Authenticatable
     {
         return 'STG-' . strtoupper(Str::random(8));
     }
+
+    // Ajoutez cette relation
+public function profile()
+{
+    return $this->hasOne(Profile::class);
+}
+
+public function demandeStage()
+{
+    return $this->hasOne(DemandeStage::class); // Adaptez selon votre relation réelle
+}
 }

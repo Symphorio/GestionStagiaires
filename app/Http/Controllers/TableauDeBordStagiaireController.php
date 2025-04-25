@@ -100,87 +100,6 @@ class TableauDeBordStagiaireController extends Controller
     }
 
     /**
-     * Affiche le calendrier optimisé
-     */
-    public function calendrier(Request $request)
-    {
-        $stagiaireId = auth('stagiaire')->id();
-        
-        $filtreType = $request->input('filtre_type', 'tous');
-        $vue = $request->input('vue', 'mois');
-        $dateStr = $request->input('date', now()->format('Y-m-d'));
-        
-        try {
-            $dateSelectionnee = Carbon::parse($dateStr);
-        } catch (\Exception $e) {
-            $dateSelectionnee = now();
-        }
-
-        $query = Evenement::where('stagiaire_id', $stagiaireId)
-            ->orderBy('date_debut', 'asc');
-
-        if ($filtreType !== 'tous') {
-            $query->where('type', $filtreType);
-        }
-
-        $evenements = $query->get();
-        
-        // Formatage des types d'événements
-        $evenements->each(function ($event) {
-            $event->type_formatted = $this->formatEventType($event->type);
-        });
-
-        $evenementsPourDate = $evenements->filter(function ($event) use ($dateSelectionnee) {
-            return Carbon::parse($event->date_debut)->isSameDay($dateSelectionnee);
-        });
-
-        return view('stagiaire.calendrier', [
-            'evenements' => $evenements,
-            'evenementsPourDate' => $evenementsPourDate,
-            'dateSelectionnee' => $dateSelectionnee,
-            'vue' => $vue,
-            'filtreType' => $filtreType
-        ]);
-    }
-
-    /**
-     * API pour récupérer les détails d'un événement
-     */
-    public function getEventDetails($id)
-    {
-        $evenement = Evenement::findOrFail($id);
-        
-        if ($evenement->stagiaire_id !== auth('stagiaire')->id()) {
-            abort(403);
-        }
-
-        return response()->json([
-            'id' => $evenement->id,
-            'titre' => $evenement->titre,
-            'date_debut' => $evenement->date_debut,
-            'type' => $evenement->type,
-            'type_formatted' => $this->formatEventType($evenement->type),
-            'couleur' => $evenement->couleur,
-            'description' => $evenement->description
-        ]);
-    }
-
-    /**
-     * Formatte le type d'événement pour l'affichage
-     */
-    protected function formatEventType($type)
-    {
-        $types = [
-            'echeance' => 'Échéance',
-            'reunion' => 'Réunion',
-            'formation' => 'Formation',
-            'ferie' => 'Jour férié'
-        ];
-
-        return $types[$type] ?? $type;
-    }
-
-    /**
      * Gestion des rapports
      */
     public function rapports()
@@ -200,38 +119,43 @@ class TableauDeBordStagiaireController extends Controller
      * Upload d'un rapport
      */
     public function uploadRapport(Request $request)
-    {
-        $request->validate([
-            'report_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
-            'comments' => 'nullable|string|max:500'
-        ]);
+{
+    $request->validate([
+        'report_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
+        'comments' => 'nullable|string|max:500'
+    ]);
 
-        $path = $request->file('report_file')->store('rapports');
+    $file = $request->file('report_file');
+    $path = $file->store('rapports');
 
-        Rapport::create([
-            'stagiaire_id' => auth('stagiaire')->id(),
-            'file_path' => $path,
-            'comments' => $request->comments,
-            'submitted_at' => now()
-        ]);
+    Rapport::create([
+        'stagiaire_id' => auth('stagiaire')->id(),
+        'file_path' => $path,
+        'original_name' => $file->getClientOriginalName(),
+        'comments' => $request->comments,
+        'submitted_at' => now()
+    ]);
 
-        return redirect()->route('stagiaire.rapports')
-                        ->with('success', 'Rapport soumis avec succès');
-    }
+    return redirect()->route('stagiaire.rapports')
+                    ->with('success', 'Rapport soumis avec succès');
+}
 
     /**
      * Téléchargement d'un rapport
      */
     public function downloadRapport($id)
-    {
-        $rapport = Rapport::findOrFail($id);
-        
-        if ($rapport->stagiaire_id !== auth('stagiaire')->id()) {
-            abort(403);
-        }
-
-        return Storage::download($rapport->file_path);
+{
+    $rapport = Rapport::findOrFail($id);
+    
+    if ($rapport->stagiaire_id !== auth('stagiaire')->id()) {
+        abort(403);
     }
+
+    return Storage::download(
+        $rapport->file_path, 
+        $rapport->original_name
+    );
+}
 
     /**
      * Gestion des mémoires - Vue liste
@@ -349,146 +273,50 @@ class TableauDeBordStagiaireController extends Controller
     }
 
     /**
-     * Affiche la liste des événements
-     */
-    public function evenements()
-    {
-        $stagiaireId = auth('stagiaire')->id();
-        $evenements = Evenement::where('stagiaire_id', $stagiaireId)
-                             ->orderBy('date_debut', 'asc')
-                             ->get();
-
-        // Formatage des types pour la vue liste
-        $evenements->each(function ($event) {
-            $event->type_formatted = $this->formatEventType($event->type);
-        });
-
-        return view('stagiaire.evenements.index', compact('evenements'));
-    }
-
-    /**
-     * Affiche le formulaire de création d'événement
-     */
-    public function createEvenement()
-    {
-        return view('stagiaire.evenements.create');
-    }
-
-    /**
-     * Enregistre un nouvel événement
-     */
-    public function storeEvenement(Request $request)
-    {
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'date_debut' => 'required|date',
-            'date_fin' => 'required|date|after_or_equal:date_debut',
-            'couleur' => 'nullable|string|size:7|starts_with:#',
-            'type' => 'required|in:echeance,reunion,formation,ferie'
-        ]);
-
-        Evenement::create([
-            'stagiaire_id' => auth('stagiaire')->id(),
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'date_debut' => $request->date_debut,
-            'date_fin' => $request->date_fin,
-            'couleur' => $request->couleur ?? $this->getDefaultColor($request->type),
-            'type' => $request->type
-        ]);
-
-        return redirect()->route('stagiaire.evenements')
-                        ->with('success', 'Événement créé avec succès');
-    }
-
-    /**
-     * Retourne la couleur par défaut selon le type d'événement
-     */
-    protected function getDefaultColor($type)
-    {
-        $colors = [
-            'echeance' => '#ef4444', // rouge
-            'reunion' => '#3b82f6',   // bleu
-            'formation' => '#10b981',  // vert
-            'ferie' => '#8b5cf6'      // violet
-        ];
-
-        return $colors[$type] ?? '#3b82f6'; // bleu par défaut
-    }
-
-    /**
-     * Affiche le formulaire d'édition d'événement
-     */
-    public function editEvenement($id)
-    {
-        $evenement = Evenement::findOrFail($id);
-        
-        if ($evenement->stagiaire_id !== auth('stagiaire')->id()) {
-            abort(403);
-        }
-
-        return view('stagiaire.evenements.edit', compact('evenement'));
-    }
-
-    /**
-     * Met à jour un événement existant
-     */
-    public function updateEvenement(Request $request, $id)
-    {
-        $evenement = Evenement::findOrFail($id);
-        
-        if ($evenement->stagiaire_id !== auth('stagiaire')->id()) {
-            abort(403);
-        }
-
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'date_debut' => 'required|date',
-            'date_fin' => 'required|date|after_or_equal:date_debut',
-            'couleur' => 'nullable|string|size:7|starts_with:#',
-            'type' => 'required|in:echeance,reunion,formation,ferie'
-        ]);
-
-        $evenement->update([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'date_debut' => $request->date_debut,
-            'date_fin' => $request->date_fin,
-            'couleur' => $request->couleur ?? $this->getDefaultColor($request->type),
-            'type' => $request->type
-        ]);
-
-        return redirect()->route('stagiaire.evenements')
-                        ->with('success', 'Événement mis à jour avec succès');
-    }
-
-    /**
-     * Supprime un événement
-     */
-    public function destroyEvenement($id)
-    {
-        $evenement = Evenement::findOrFail($id);
-        
-        if ($evenement->stagiaire_id !== auth('stagiaire')->id()) {
-            abort(403);
-        }
-
-        $evenement->delete();
-
-        return redirect()->route('stagiaire.evenements')
-                        ->with('success', 'Événement supprimé avec succès');
-    }
-
-    /**
      * Affiche le profil du stagiaire
      */
     public function profil()
-    {
-        $stagiaire = auth('stagiaire')->user();
-        return view('stagiaire.profil', compact('stagiaire'));
+{
+    $stagiaire = auth('stagiaire')->user()->load(['demandeStage', 'profile']);
+    
+    if (!$stagiaire->profile) {
+        $stagiaire->profile()->create();
     }
+
+    $profil = [
+        'fullName' => $stagiaire->nom.' '.$stagiaire->prenom,
+        'email' => $stagiaire->email,
+        'phone' => $stagiaire->demandeStage->phone ?? 'Non renseigné',
+        'internId' => $stagiaire->intern_id,
+        'department' => $stagiaire->demandeStage->department ?? 'Non renseigné',
+        'supervisor' => $stagiaire->demandeStage->supervisor ?? 'Non renseigné',
+        'period' => $stagiaire->demandeStage->period ?? 'Non renseigné',
+        'avatarUrl' => $stagiaire->profile->avatar_path 
+                      ? Storage::url($stagiaire->profile->avatar_path)
+                      : null
+    ];
+
+    return view('stagiaire.profil', compact('profil'));
+}
+
+public function updateProfil(Request $request)
+{
+    $request->validate([
+        'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
+
+    $stagiaire = auth('stagiaire')->user();
+    
+    if ($request->hasFile('avatar')) {
+        $path = $request->file('avatar')->store('avatars/stagiaires', 'public');
+        $stagiaire->profile()->updateOrCreate(
+            ['stagiaire_id' => $stagiaire->id],
+            ['avatar_path' => $path]
+        );
+    }
+
+    return back()->with('success', 'Avatar mis à jour avec succès');
+}
 
     /**
      * Affiche les paramètres du stagiaire

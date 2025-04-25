@@ -14,10 +14,20 @@ class CheckRole
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle($request, Closure $next, $role)
-{
-    if (!auth()->check() || auth()->user()->role->nom != $role) {
-        abort(403);
+    {
+        $guard = null;
+        
+        // Détermine le guard en fonction du rôle
+        switch($role) {
+            case 'stagiaire': $guard = 'stagiaire'; break;
+            case 'encadreur': $guard = 'encadreur'; break;
+            // ... autres rôles
+        }
+    
+        if (!auth($guard)->check() || auth($guard)->user()->role->nom != $role) {
+            abort(403);
+        }
+        
+        return $next($request);
     }
-    return $next($request);
-}
 }

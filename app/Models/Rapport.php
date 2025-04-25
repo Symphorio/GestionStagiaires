@@ -9,9 +9,10 @@ class Rapport extends Model
 {
     protected $fillable = [
         'stagiaire_id',
-        'file_path', 
+        'file_path',
+        'original_name',
         'comments',
-        'submitted_at' // ou 'created_at'
+        'submitted_at'
     ];
 
     public function stagiaire()

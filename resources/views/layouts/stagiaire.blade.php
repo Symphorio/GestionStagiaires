@@ -176,14 +176,23 @@
                         </div>
                     </div>
                     
-                    <!-- Menu Utilisateur -->
+                    <!-- Menu Utilisateur - MODIFIÉ POUR AFFICHER LE NOM COMPLET -->
                     <div class="relative">
                         <button @click="userMenuOpen = !userMenuOpen" 
                                 class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
-                            <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                <span class="text-sm font-medium">#{{ Auth::id() }}</span>
+                            <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                @if(auth('stagiaire')->user()->profile && auth('stagiaire')->user()->profile->avatar_path)
+                                    <img src="{{ Storage::url(auth('stagiaire')->user()->profile->avatar_path) }}" 
+                                         alt="Avatar" class="h-full w-full object-cover">
+                                @else
+                                    <span class="text-xs font-medium">
+                                        {{ strtoupper(substr(auth('stagiaire')->user()->prenom, 0, 1) . substr(auth('stagiaire')->user()->nom, 0, 1)) }}
+                                    </span>
+                                @endif
                             </div>
-                            <span>Stagiaire #{{ Auth::id() }}</span>
+                            <span class="text-sm font-medium">
+                                {{ auth('stagiaire')->user()->prenom }} {{ auth('stagiaire')->user()->nom }}
+                            </span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -191,7 +200,17 @@
                         
                         <div x-show="userMenuOpen" @click.away="userMenuOpen = false" 
                              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
-                            <!-- Contenu du menu utilisateur -->
+                            <div class="py-1">
+                                <a href="{{ route('stagiaire.profil') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    Mon Profil
+                                </a>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        Déconnexion
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

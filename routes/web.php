@@ -50,9 +50,10 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->
     Route::get('/soumission-memoire', [TableauDeBordStagiaireController::class, 'afficherSoumissionMemoire'])->name('soumission-memoire');
     Route::post('/soumettre-memoire', [TableauDeBordStagiaireController::class, 'soumettreMemoire'])->name('soumettre-memoire');
     Route::get('/telecharger-memoire/{id}', [TableauDeBordStagiaireController::class, 'telechargerMemoire'])->name('telecharger-memoire');
-    Route::get('/calendrier', [TableauDeBordStagiaireController::class, 'calendrier'])->name('calendrier');
-    Route::get('/calendrier/details/{id}', [TableauDeBordStagiaireController::class, 'getEventDetails'])->name('calendrier.details');
     Route::get('/profil', [TableauDeBordStagiaireController::class, 'profil'])->name('profil');
+    Route::post('/profil', [TableauDeBordStagiaireController::class, 'updateProfil'])->name('profil.update');
+    Route::put('/profil/avatar', [TableauDeBordStagiaireController::class, 'updateProfil'])
+     ->name('profil.update.avatar');
     Route::get('/parametres', [TableauDeBordStagiaireController::class, 'parametres'])->name('parametres');
 });
 
