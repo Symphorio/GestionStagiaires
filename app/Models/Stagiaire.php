@@ -57,4 +57,9 @@ public function demandeStage()
 {
     return $this->hasOne(DemandeStage::class); // Adaptez selon votre relation réelle
 }
+
+public function parametres()
+{
+    return $this->hasOne(Parametre::class);
+}
 }

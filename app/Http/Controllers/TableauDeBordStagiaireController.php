@@ -319,10 +319,66 @@ public function updateProfil(Request $request)
 }
 
     /**
-     * Affiche les paramètres du stagiaire
-     */
-    public function parametres()
-    {
-        return view('stagiaire.parametres');
-    }
+ * Affiche les paramètres du stagiaire
+ */
+public function parametres()
+{
+    $user = auth('stagiaire')->user();
+    
+    $userParametres = $user->parametres()->firstOrCreate(
+        ['stagiaire_id' => $user->id],
+        [
+            'notifications' => true,
+            'email_alerts' => true,
+            'dark_mode' => false,
+            'language' => 'fr'
+        ]
+    );
+
+    return view('stagiaire.parametres', compact('userParametres'));
+}
+
+/**
+ * Met à jour les paramètres
+ */
+public function update(Request $request)
+{
+    $validated = $request->validate([
+        'notifications' => 'sometimes|boolean',
+        'email_alerts' => 'sometimes|boolean',
+        'dark_mode' => 'sometimes|boolean',
+        'language' => 'sometimes|in:fr,en'
+    ]);
+
+    $user = auth('stagiaire')->user();
+    $user->settings()->updateOrCreate(
+        ['stagiaire_id' => $user->id],
+        $validated
+    );
+
+    return back()->with('success', 'Paramètres mis à jour avec succès');
+}
+
+/**
+ * Supprime le compte
+ */
+public function destroy(Request $request)
+{
+    $request->validate([
+        'password' => 'required|current_password:stagiaire'
+    ]);
+
+    $user = auth('stagiaire')->user();
+    
+    // Déconnexion avant suppression
+    auth('stagiaire')->logout();
+    
+    // Suppression de l'utilisateur
+    $user->delete();
+    
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/')->with('success', 'Votre compte a été supprimé avec succès');
+}
 }
