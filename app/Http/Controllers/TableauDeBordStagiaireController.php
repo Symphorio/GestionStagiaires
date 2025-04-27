@@ -350,13 +350,12 @@ public function update(Request $request)
         'language' => 'sometimes|in:fr,en'
     ]);
 
-    $user = auth('stagiaire')->user();
-    $user->settings()->updateOrCreate(
-        ['stagiaire_id' => $user->id],
+    auth('stagiaire')->user()->parametres()->updateOrCreate(
+        ['stagiaire_id' => auth('stagiaire')->id()],
         $validated
     );
 
-    return back()->with('success', 'Paramètres mis à jour avec succès');
+    return response()->json(['success' => true]);
 }
 
 /**

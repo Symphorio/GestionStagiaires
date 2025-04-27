@@ -55,8 +55,8 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->
     Route::put('/profil/avatar', [TableauDeBordStagiaireController::class, 'updateProfil'])
      ->name('profil.update.avatar');
     Route::get('/parametres', [TableauDeBordStagiaireController::class, 'parametres'])->name('parametres');
-    Route::put('/', [TableauDeBordStagiaireController::class, 'update'])->name('parametres.update');
-    Route::delete('/', [TableauDeBordStagiaireController::class, 'destroy'])->name('parametres.destroy');
+    Route::put('/parametres/update', [TableauDeBordStagiaireController::class, 'update'])->name('parametres.update');
+    Route::delete('/parametres', [TableauDeBordStagiaireController::class, 'destroy'])->name('parametres.destroy');
 });
 
 // Autres espaces (DPAF, Tuteur)

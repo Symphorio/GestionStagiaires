@@ -6,6 +6,14 @@
     <title>MASM - Tableau de Bord Stagiaire</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+    // Appliquer le mode sombre au chargement
+    if (localStorage.getItem('dark-mode') === 'true') {
+        document.documentElement.classList.add('dark');
+    } else if (!localStorage.getItem('dark-mode') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+    }
+</script>
     <style>
         .dashboard-header {
             font-size: 1.5rem;

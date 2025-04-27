@@ -48,17 +48,38 @@
         </div>
     </div>
     
-    <!-- Actions rapides -->
+    <!-- Actions rapides - Version corrigée -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow">
+        <!-- Carte Rapport -->
+        <div class="bg-white p-6 rounded-lg shadow flex flex-col">
             <h3 class="text-lg font-medium mb-4">Soumettre un Rapport</h3>
-            <p class="text-gray-500 mb-4">
+            <p class="text-gray-500 mb-4 flex-grow">
                 Soumettez votre rapport de stage pour évaluation par votre encadreur.
             </p>
-            <a href="{{ route('stagiaire.rapports') }}" class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                <i data-lucide="file-text" class="h-4 w-4 mr-2"></i>
-                Soumettre un Rapport
-            </a>
+            <div class="mt-auto">
+                <a href="{{ route('stagiaire.rapports') }}" class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                    Soumettre un Rapport
+                </a>
+            </div>
+        </div>
+        
+        <!-- Carte Mémoire -->
+        <div class="bg-white p-6 rounded-lg shadow flex flex-col">
+            <h3 class="text-lg font-medium mb-4">Soumettre un Mémoire</h3>
+            <p class="text-gray-500 mb-4 flex-grow">
+                Soumettez votre mémoire de fin de stage pour évaluation finale.
+            </p>
+            <div class="mt-auto">
+                <a href="{{ route('stagiaire.soumission-memoire') }}" class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
+                    Soumettre un Mémoire
+                </a>
+            </div>
         </div>
     </div>
 </div>

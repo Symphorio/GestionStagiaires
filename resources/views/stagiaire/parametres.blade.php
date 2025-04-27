@@ -109,39 +109,99 @@
     .toggle-label {
         transition: background-color 0.2s ease;
     }
+
+    /* Mode sombre */
+    .dark {
+    @apply bg-gray-900 text-gray-100;
+}
+.dark .glass-card {
+    @apply bg-gray-800 border-gray-700;
+}
+    .dark .text-gray-500 {
+        @apply text-gray-400;
+    }
+
+    .dark .border-gray-200 {
+        @apply border-gray-700;
+    }
+
+    html {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
 </style>
 
 <script>
-    // Confirmation avant suppression
-    function confirmDelete() {
-        if (confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) {
-            // Soumettre le formulaire de suppression
-            document.getElementById('delete-form').submit();
+    // 1. Appliquer le mode sombre au chargement
+    function initDarkMode() {
+        const savedMode = localStorage.getItem('dark-mode');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Priorité: localStorage > paramètres serveur > préférence système
+        const isDark = savedMode ? savedMode === 'true' : 
+                      {{ $userParametres->dark_mode ? 'true' : 'false' }} || systemDark;
+        
+        document.documentElement.classList.toggle('dark', isDark);
+        document.getElementById('darkMode').checked = isDark;
+    }
+
+    // 2. Détecter le changement immédiat
+    document.getElementById('darkMode').addEventListener('change', function() {
+        const isDark = this.checked;
+        document.documentElement.classList.toggle('dark', isDark);
+        localStorage.setItem('dark-mode', isDark);
+        
+        // Sauvegarde immédiate sans rechargement
+        updateDarkModeOnServer(isDark);
+    });
+
+    // 3. Mise à jour asynchrone sur le serveur
+    async function updateDarkModeOnServer(isDark) {
+        try {
+            await fetch("{{ route('stagiaire.parametres.update') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    dark_mode: isDark,
+                    _method: 'PUT'
+                })
+            });
+        } catch (error) {
+            console.error("Erreur de sauvegarde:", error);
         }
     }
 
-    // Toast pour la confirmation des paramètres
-    document.querySelector('form').addEventListener('submit', function(e) {
+    // 4. Gestion du formulaire complet
+    document.querySelector('form').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Envoyer le formulaire en AJAX
-        fetch(this.action, {
-            method: 'POST',
-            body: new FormData(this),
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
+        try {
+            const formData = new FormData(this);
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            
+            if (response.ok) {
+                Toastify({
+                    text: "Paramètres sauvegardés",
+                    duration: 3000,
+                    backgroundColor: "#4f46e5",
+                }).showToast();
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Afficher un message de succès
-            alert('Paramètres mis à jour avec succès');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
     });
+
+    // Initialisation au chargement
+    document.addEventListener('DOMContentLoaded', initDarkMode);
 </script>
 
 <!-- Formulaire caché pour la suppression -->
