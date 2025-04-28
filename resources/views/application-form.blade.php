@@ -25,7 +25,7 @@
             </div>
         @endif
         
-        <form method="POST" action="{{ route('stage.soumettre') }}" class="space-y-6">
+        <form method="POST" action="{{ route('stage.soumettre') }}" id="demandeStageForm" class="space-y-6" enctype="multipart/form-data">
             @csrf
             
             <!-- En haut du formulaire -->
@@ -145,15 +145,24 @@
             
             <!-- Lettre de motivation -->
             <div class="space-y-2">
-                <label for="lettre_motivation" class="block text-sm font-medium text-gray-700">Lettre de Motivation</label>
-                <textarea 
-                    id="lettre_motivation"
-                    name="lettre_motivation"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px]"
-                    placeholder="Décrivez votre motivation pour ce stage..."
-                    required
-                >{{ old('lettre_motivation') }}</textarea>
-            </div>
+    <label for="lettre_motivation" class="block text-sm font-medium text-gray-700">
+        Lettre de Motivation (PDF)
+    </label>
+    <input 
+        type="file"
+        id="lettre_motivation"
+        name="lettre_motivation"
+        class="block w-full text-sm text-gray-500
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-md file:border-0
+               file:text-sm file:font-semibold
+               file:bg-blue-50 file:text-blue-700
+               hover:file:bg-blue-100"
+        accept=".pdf"
+        required
+    />
+    <p class="mt-1 text-xs text-gray-500">Format PDF uniquement (max 2MB)</p>
+</div>
             
             <!-- Bouton de soumission -->
             <button 

@@ -24,7 +24,7 @@ class StageController extends Controller
             'telephone' => 'required|string|max:20',
             'formation' => 'required|string|max:255',
             'specialisation' => 'nullable|string|max:255',
-            'lettre_motivation' => 'required|string|min:50',
+            'lettre_motivation' => 'required|file|mimes:pdf|max:2048', // Modifié pour accepter les fichiers PDF
             'date_debut' => 'required|date',
             'date_fin' => 'required|date|after:date_debut',
         ];
@@ -33,6 +33,8 @@ class StageController extends Controller
             'required' => 'Le champ :attribute est obligatoire.',
             'email' => 'L\'email doit être une adresse valide.',
             'after' => 'La date de fin doit être après la date de début.',
+            'lettre_motivation.mimes' => 'La lettre de motivation doit être un fichier PDF.',
+            'lettre_motivation.max' => 'Le fichier ne doit pas dépasser 2MB.',
         ];
 
         $validation = Validator::make($request->all(), $reglesValidation, $messages);
@@ -52,6 +54,9 @@ class StageController extends Controller
         }
 
         try {
+            // Stockage du fichier PDF
+            $lettreMotivationPath = $request->file('lettre_motivation')->store('lettres_motivation', 'public');
+
             // Création de la demande de stage
             DemandeStage::create([
                 'prenom' => $request->prenom,
@@ -60,7 +65,7 @@ class StageController extends Controller
                 'telephone' => $request->telephone,
                 'formation' => $request->formation,
                 'specialisation' => $request->specialisation,
-                'lettre_motivation' => $request->lettre_motivation,
+                'lettre_motivation_path' => $lettreMotivationPath, // Champ modifié
                 'date_debut' => Carbon::parse($request->date_debut),
                 'date_fin' => Carbon::parse($request->date_fin),
                 'statut' => 'en_attente', // Ajout d'un statut par défaut

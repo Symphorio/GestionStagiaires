@@ -18,7 +18,7 @@ class DemandeStage extends Model
         'telephone',
         'formation',
         'specialisation',
-        'lettre_motivation',
+        'lettre_motivation_path',
         'date_debut',
         'date_fin',
     ];

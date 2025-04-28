@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('telephone');
             $table->string('formation');
             $table->string('specialisation')->nullable();
-            $table->text('lettre_motivation');
+            $table->string('lettre_motivation_path')->nullable();
             $table->date('date_debut');
             $table->date('date_fin');
             $table->timestamps();
