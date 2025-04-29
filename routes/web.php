@@ -68,6 +68,20 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 });
 
+// Routes pour le SG
+Route::prefix('sg')->group(function () {
+    Route::get('/login', [App\Http\Controllers\Auth\SgLoginController::class, 'showLoginForm'])->name('sg.login');
+    Route::post('/login', [App\Http\Controllers\Auth\SgLoginController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\Auth\SgLoginController::class, 'logout'])->name('sg.logout');
+    
+    // Routes protégées pour le SG
+    Route::middleware('auth:sg')->group(function () {
+        Route::get('/dashboard', function () {
+            return view('sg.dashboard');
+        })->name('sg.dashboard');
+    });
+});
+
 Route::fallback(function () {
     return redirect('/');
 });

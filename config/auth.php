@@ -15,6 +15,10 @@ return [
         'driver' => 'session',
         'provider' => 'stagiaires',
     ],
+    'sg' => [
+        'driver' => 'session',
+        'provider' => 'sgs',
+    ],
     'dpaf' => [
         'driver' => 'session',
         'provider' => 'dpafs',
@@ -33,6 +37,10 @@ return [
     'stagiaires' => [
         'driver' => 'eloquent',
         'model' => App\Models\Stagiaire::class,
+    ],
+    'sgs' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Sg::class,
     ],
     'dpafs' => [
         'driver' => 'eloquent',

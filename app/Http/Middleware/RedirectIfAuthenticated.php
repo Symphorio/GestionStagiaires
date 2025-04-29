@@ -34,6 +34,7 @@ protected function getHomeRouteForGuard($guard)
         'stagiaire' => route('stagiaire.dashboard'),
         'dpaf' => route('dpaf.dashboard'),
         'tuteur' => route('tuteur.dashboard'),
+        'sg' => route('sg.dashboard'),
         default => RouteServiceProvider::HOME
     };
 }
