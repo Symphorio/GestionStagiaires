@@ -73,6 +73,8 @@ Route::prefix('sg')->group(function () {
     Route::get('/login', [App\Http\Controllers\Auth\SgLoginController::class, 'showLoginForm'])->name('sg.login');
     Route::post('/login', [App\Http\Controllers\Auth\SgLoginController::class, 'login']);
     Route::post('/logout', [App\Http\Controllers\Auth\SgLoginController::class, 'logout'])->name('sg.logout');
+    Route::get('/register', [App\Http\Controllers\Auth\SgRegisterController::class, 'showRegistrationForm'])->name('sg.register');
+    Route::post('/register', [App\Http\Controllers\Auth\SgRegisterController::class, 'register']);
     
     // Routes protégées pour le SG
     Route::middleware('auth:sg')->group(function () {

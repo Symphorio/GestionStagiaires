@@ -10,6 +10,6 @@ class Sg extends Authenticatable
 {
     use Notifiable;
 
-    protected $fillable = ['nom', 'description', 'email', 'password'];
+    protected $fillable = ['nom', 'email', 'password'];
     protected $hidden = ['password', 'remember_token'];
 }
