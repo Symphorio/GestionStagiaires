@@ -123,6 +123,24 @@
         </div>
     </div>
 </section>
+
+<!-- Accès aux espaces réservés -->
+<section class="py-12 bg-gray-50">
+    <div class="container mx-auto text-center">
+        <h3 class="text-xl font-medium mb-6">Accès aux espaces réservés</h3>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="{{ route('sg.login') }}" 
+               class="hover-scale px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-all">
+               Espace Secrétaire Général
+            </a>
+            
+            <a href="{{ route('dpaf.login') }}" 
+               class="hover-scale px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition-all">
+               Espace DPAF
+            </a>
+        </div>
+    </div>
+</section>
     
     <!-- Features Section -->
     <section class="py-16 md:py-24 bg-gray-100 px-4">
