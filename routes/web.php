@@ -5,43 +5,54 @@ use App\Http\Controllers\StageController;
 use App\Http\Controllers\CompteStagiaireController;
 use App\Http\Controllers\TableauDeBordStagiaireController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\DpafLoginController;
+use App\Http\Controllers\Auth\DpafRegisterController;
+use App\Http\Controllers\Auth\SgLoginController;
+use App\Http\Controllers\Auth\SgRegisterController;
+use App\Http\Controllers\SgDashboardController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-});
-
-// Routes publiques
+// Routes publiques pour les stages
 Route::prefix('stages')->group(function () {
     Route::get('/formulaire', [StageController::class, 'afficherFormulaire'])->name('stage.formulaire');
     Route::post('/demande-de-stage', [StageController::class, 'soumettreFormulaire'])->name('stage.soumettre');
 });
 
-// Routes d'authentification unifiées
+// Routes d'authentification (accessibles sans être connecté)
 Route::middleware('guest')->group(function () {
-    // Inscription
-    Route::get('/register', [CompteStagiaireController::class, 'showRegistrationForm'])->name('register.form');
-    Route::post('/register', [CompteStagiaireController::class, 'register'])->name('register.submit');
+    // Authentification Stagiaire
+    Route::get('/espace-stagiaire', [LoginController::class, 'showLoginForm'])->name('stagiaire.login');
+    Route::post('/espace-stagiaire', [LoginController::class, 'login'])->name('stagiaire.login.submit');
     
-   // Authentification unique
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+    // Inscription Stagiaire
+    Route::get('/register-stagiaire', [CompteStagiaireController::class, 'showRegistrationForm'])->name('stagiaire.register.form');
+    Route::post('/register-stagiaire', [CompteStagiaireController::class, 'register'])->name('stagiaire.register.submit');
+    
+    // Authentification SG
+    Route::prefix('sg')->group(function () {
+        Route::get('/login', [SgLoginController::class, 'showLoginForm'])->name('sg.login');
+        Route::post('/login', [SgLoginController::class, 'login'])->name('sg.login.submit');
+        Route::get('/register', [SgRegisterController::class, 'showRegistrationForm'])->name('sg.register');
+        Route::post('/register', [SgRegisterController::class, 'register'])->name('sg.register.submit');
+    });
+    
+    // Authentification DPAF
+    Route::prefix('dpaf')->group(function () {
+        Route::get('/login', [DpafLoginController::class, 'showLoginForm'])->name('dpaf.login');
+        Route::post('/login', [DpafLoginController::class, 'login'])->name('dpaf.login.submit');
+        Route::get('/register', [DpafRegisterController::class, 'showRegistrationForm'])->name('dpaf.register');
+        Route::post('/register', [DpafRegisterController::class, 'register'])->name('dpaf.register.submit');
+    });
 });
 
-// Déconnexion
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+// Déconnexion globale
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth:stagiaire');
 
-// Espace stagiaire
-Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->group(function() {
+// Espace Stagiaire (protégé)
+Route::prefix('stagiaire')->name('stagiaire.')->middleware('auth:stagiaire')->group(function() {
     Route::get('/dashboard', [TableauDeBordStagiaireController::class, 'dashboard'])->name('dashboard');
     Route::get('/taches', [TableauDeBordStagiaireController::class, 'taches'])->name('taches');
     Route::patch('/taches/{task}/status', [TableauDeBordStagiaireController::class, 'updateTaskStatus'])->name('taches.update-status');
@@ -53,35 +64,30 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware(['auth:stagiaire'])->
     Route::get('/profil', [TableauDeBordStagiaireController::class, 'profil'])->name('profil');
     Route::post('/profil', [TableauDeBordStagiaireController::class, 'updateProfil'])->name('profil.update');
     Route::put('/profil/avatar', [TableauDeBordStagiaireController::class, 'updateProfil'])
-     ->name('profil.update.avatar');
+        ->name('profil.update.avatar');
     Route::get('/parametres', [TableauDeBordStagiaireController::class, 'parametres'])->name('parametres');
     Route::put('/parametres/update', [TableauDeBordStagiaireController::class, 'update'])->name('parametres.update');
     Route::delete('/parametres', [TableauDeBordStagiaireController::class, 'destroy'])->name('parametres.destroy');
 });
 
-// Autres espaces (DPAF, Tuteur)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return auth()->user()->hasRole('stagiaire') 
-            ? redirect()->route('stagiaire.dashboard')
-            : view('dashboard');
-    })->name('dashboard');
+// Espace SG (protégé)
+Route::prefix('sg')->middleware('auth:sg')->group(function() {
+    Route::get('/dashboard', [SgDashboardController::class, 'index'])->name('sg.dashboard');
+    Route::post('/logout', [SgLoginController::class, 'logout'])->name('sg.logout');
 });
 
-// Routes pour le SG
-Route::prefix('sg')->group(function () {
-    Route::get('/login', [App\Http\Controllers\Auth\SgLoginController::class, 'showLoginForm'])->name('sg.login');
-    Route::post('/login', [App\Http\Controllers\Auth\SgLoginController::class, 'login']);
-    Route::post('/logout', [App\Http\Controllers\Auth\SgLoginController::class, 'logout'])->name('sg.logout');
-    Route::get('/register', [App\Http\Controllers\Auth\SgRegisterController::class, 'showRegistrationForm'])->name('sg.register');
-    Route::post('/register', [App\Http\Controllers\Auth\SgRegisterController::class, 'register']);
+// Espace DPAF (protégé)
+Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
+    Route::get('/dashboard', function () {
+        return view('dpaf.dashboard');
+    })->name('dpaf.dashboard');
+    Route::post('/logout', [DpafLoginController::class, 'logout'])->name('dpaf.logout');
     
-    // Routes protégées pour le SG
-    Route::middleware('auth:sg')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('sg.dashboard');
-        })->name('sg.dashboard');
-    });
+    // Mot de passe oublié
+    Route::get('password/reset', [Auth\DpafForgotPasswordController::class, 'showLinkRequestForm'])->name('dpaf.password.request');
+    Route::post('password/email', [Auth\DpafForgotPasswordController::class, 'sendResetLinkEmail'])->name('dpaf.password.email');
+    Route::get('password/reset/{token}', [Auth\DpafResetPasswordController::class, 'showResetForm'])->name('dpaf.password.reset');
+    Route::post('password/reset', [Auth\DpafResetPasswordController::class, 'reset'])->name('dpaf.password.update');
 });
 
 Route::fallback(function () {

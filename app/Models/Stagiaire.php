@@ -12,6 +12,7 @@ class Stagiaire extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $guard = 'stagiaire';
+    protected $table = 'stagiaires'; // Important!
 
     protected $fillable = [
         'nom', 

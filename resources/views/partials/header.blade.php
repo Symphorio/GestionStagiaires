@@ -9,7 +9,7 @@
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
             </a>
 
-            <a href="{{ route('login.submit') }}" class="nav-link group relative">
+            <a href="{{ route('stagiaire.login') }}?force=true" class="nav-link group relative">
                 <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Espace stagiaires</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
             </a>
@@ -34,7 +34,7 @@
             <a href="{{ route('stage.formulaire') }}" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
                 <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Demande</span>
             </a>
-            <a href="{{ route('login.submit') }}" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
+            <a href="{{ route('stagiaire.login') }}" class="mobile-nav-link py-2 pl-2 border-l-4 border-transparent hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
                 <span class="text-gray-600 hover:text-blue-600 transition-colors duration-300">Espace stagiaires</span>
             </a>
         </div>

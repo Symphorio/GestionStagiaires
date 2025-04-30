@@ -1,8 +1,8 @@
 <!-- resources/views/auth/login.blade.php -->
 <div class="glass-card w-full max-w-md mx-auto p-8 animate-scale-in">
-    <h2 class="text-2xl font-medium mb-6 text-center">Connexion Stagiaire</h2>
+    <h2 class="text-2xl font-medium mb-6 text-center">Connexion</h2>
     
-    <form method="POST" action="{{ route('stagiaire.login.submit') }}" class="space-y-6">
+    <form method="POST" action="{{ route('dpaf.login') }}" class="space-y-6">
         @csrf
         
         <div class="space-y-2">
@@ -36,22 +36,6 @@
             @enderror
         </div>
         
-        <div class="space-y-2">
-            <label for="intern_id" class="text-sm font-medium">ID Stagiaire</label>
-            <input 
-                type="text"
-                id="intern_id"
-                name="intern_id"
-                value="{{ old('intern_id') }}"
-                class="focus-ring w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="ID reçu par email"
-                required
-            />
-            <p class="text-xs text-gray-500 mt-1">L'identifiant unique fourni dans l'email d'acceptation</p>
-            @error('intern_id')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
         
         <button 
             type="submit" 
