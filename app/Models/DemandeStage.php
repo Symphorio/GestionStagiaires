@@ -12,8 +12,8 @@ class DemandeStage extends Model
     protected $table = 'demandes_stage';
 
     protected $fillable = [
-        'prenom',
-        'nom',
+        'prenom', // prénom du stagiaire
+        'nom',     // nom du stagiaire
         'email',
         'telephone',
         'formation',
@@ -21,12 +21,19 @@ class DemandeStage extends Model
         'lettre_motivation_path',
         'date_debut',
         'date_fin',
+        'status'   // assurez-vous que ce champ existe
     ];
 
-    protected $dates = [
-        'date_debut',
-        'date_fin',
-        'created_at',
-        'updated_at',
+    protected $casts = [
+        'date_debut' => 'date',
+        'date_fin' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    // Accessor pour le nom complet
+    public function getNomCompletAttribute()
+    {
+        return $this->prenom.' '.$this->nom;
+    }
 }

@@ -83,14 +83,16 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware('auth:stagiaire')->gr
 // Espace SG (protégé)
 Route::prefix('sg')->middleware('auth:sg')->group(function() {
     Route::get('/dashboard', [SgDashboardController::class, 'index'])->name('sg.dashboard');
+    Route::get('/requests', [SgDashboardController::class, 'newRequests'])->name('sg.requests.index');
+    Route::patch('/requests/{id}/forward', [SgDashboardController::class, 'forward'])->name('sg.requests.forward');
     Route::post('/logout', [SgLoginController::class, 'logout'])->name('sg.logout');
 });
 
 // Espace DPAF (protégé)
 Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
-    Route::get('/dashboard', function () {
-        return view('dpaf.dashboard');
-    })->name('dpaf.dashboard');
+    Route::get('/', [DpafDashboardController::class, 'index'])->name('dpaf.dashboard');
+    Route::get('/pending-requests', [DpafDashboardController::class, 'pending'])->name('dpaf.requests.pending');
+    Route::get('/authorize', [DpafDashboardController::class, 'authorize'])->name('dpaf.requests.authorize');
     Route::post('/logout', [DpafLoginController::class, 'logout'])->name('dpaf.logout');
     
     // Mot de passe oublié
@@ -102,9 +104,9 @@ Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
 
 // Espace SRHDS (protégé) - Nouvelle section ajoutée
 Route::prefix('srhds')->middleware('auth:srhds')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('srhds.dashboard');
-    })->name('srhds.dashboard');
+    Route::get('/', [SrhdsDashboardController::class, 'index'])->name('srhds.dashboard');
+    Route::get('/assign', [SrhdsDashboardController::class, 'assign'])->name('srhds.assign');
+    Route::get('/finalize', [SrhdsDashboardController::class, 'finalize'])->name('srhds.finalize');
     Route::post('/logout', [SrhdsLoginController::class, 'logout'])->name('srhds.logout');
 });
 
