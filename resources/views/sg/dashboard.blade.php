@@ -103,14 +103,14 @@
                                     </div>
                                 @endif
                                 <div class="mt-2 text-sm flex items-center">
-                                <span class="font-medium flex items-center">
-                                    <i class="fas fa-file-pdf text-red-500 mr-2"></i>
-                                    Lettre :
-                                </span> 
-                                <span class="text-gray-600 ml-1">
-                                    {{ basename($demande->lettre_motivation_path) }}
-                                </span>
-                                </div>
+    <span class="font-medium flex items-center">
+        <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+        Lettre :
+    </span> 
+    <span class="text-gray-600 ml-1">
+        Document.pdf
+    </span>
+</div>
                             </div>
                             
                             @if($demande->status === 'en_attente_sg')
