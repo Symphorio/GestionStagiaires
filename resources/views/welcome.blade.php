@@ -138,6 +138,11 @@
                class="hover-scale px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition-all">
                Espace DPAF
             </a>
+
+            <a href="{{ route('srhds.login') }}" 
+                class="text-blue-600 hover:underline">
+                Accès SRHDS
+            </a>
         </div>
     </div>
 </section>

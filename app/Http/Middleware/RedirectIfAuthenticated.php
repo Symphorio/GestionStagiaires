@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\SrhdsLoginController;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,6 +36,7 @@ protected function getHomeRouteForGuard($guard)
         'dpaf' => route('dpaf.dashboard'),
         'tuteur' => route('tuteur.dashboard'),
         'sg' => route('sg.dashboard'),
+        'srhds' => route('srhds.dashboard'), // Ajoutez cette ligne
         default => RouteServiceProvider::HOME
     };
 }

@@ -23,6 +23,10 @@ return [
         'driver' => 'session',
         'provider' => 'dpafs',
     ],
+    'srhds' => [
+        'driver' => 'session',
+        'provider' => 'srhds',
+    ],
     'tuteur' => [
         'driver' => 'session',
         'provider' => 'tuteurs',
@@ -45,6 +49,10 @@ return [
     'dpafs' => [
         'driver' => 'eloquent',
         'model' => App\Models\Dpaf::class,
+    ],
+    'srhds' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Srhds::class,
     ],
     'tuteurs' => [
         'driver' => 'eloquent',

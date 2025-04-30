@@ -10,6 +10,8 @@ use App\Http\Controllers\Auth\DpafRegisterController;
 use App\Http\Controllers\Auth\SgLoginController;
 use App\Http\Controllers\Auth\SgRegisterController;
 use App\Http\Controllers\SgDashboardController;
+use App\Http\Controllers\Auth\SrhdsLoginController;
+use App\Http\Controllers\Auth\SrhdsRegisterController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -45,6 +47,14 @@ Route::middleware('guest')->group(function () {
         Route::post('/login', [DpafLoginController::class, 'login'])->name('dpaf.login.submit');
         Route::get('/register', [DpafRegisterController::class, 'showRegistrationForm'])->name('dpaf.register');
         Route::post('/register', [DpafRegisterController::class, 'register'])->name('dpaf.register.submit');
+    });
+    
+    // Authentification SRHDS (nouvelle section ajoutée)
+    Route::prefix('srhds')->group(function () {
+        Route::get('/login', [SrhdsLoginController::class, 'showLoginForm'])->name('srhds.login');
+        Route::post('/login', [SrhdsLoginController::class, 'login'])->name('srhds.login.submit');
+        Route::get('/register', [SrhdsRegisterController::class, 'showRegistrationForm'])->name('srhds.register');
+        Route::post('/register', [SrhdsRegisterController::class, 'register'])->name('srhds.register.submit');
     });
 });
 
@@ -88,6 +98,14 @@ Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
     Route::post('password/email', [Auth\DpafForgotPasswordController::class, 'sendResetLinkEmail'])->name('dpaf.password.email');
     Route::get('password/reset/{token}', [Auth\DpafResetPasswordController::class, 'showResetForm'])->name('dpaf.password.reset');
     Route::post('password/reset', [Auth\DpafResetPasswordController::class, 'reset'])->name('dpaf.password.update');
+});
+
+// Espace SRHDS (protégé) - Nouvelle section ajoutée
+Route::prefix('srhds')->middleware('auth:srhds')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('srhds.dashboard');
+    })->name('srhds.dashboard');
+    Route::post('/logout', [SrhdsLoginController::class, 'logout'])->name('srhds.logout');
 });
 
 Route::fallback(function () {
