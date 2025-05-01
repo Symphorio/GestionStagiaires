@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SG Admin Dashboard</title>
+    <title>DPAF Admin Dashboard</title>
     <meta name="description" content="Système de gestion des demandes administratives" />
     <meta name="author" content="Lovable" />
     

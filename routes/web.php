@@ -22,6 +22,7 @@ Route::get('/', function () {
 Route::prefix('stages')->group(function () {
     Route::get('/formulaire', [StageController::class, 'afficherFormulaire'])->name('stage.formulaire');
     Route::post('/demande-de-stage', [StageController::class, 'soumettreFormulaire'])->name('stage.soumettre');
+    Route::get('/download-lettre/{id}', [StageController::class, 'downloadLettre'])->name('stage.downloadLettre');
 });
 
 // Routes d'authentification (accessibles sans être connecté)
@@ -84,7 +85,7 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware('auth:stagiaire')->gr
 // Espace SG (protégé)
 Route::prefix('sg')->middleware('auth:sg')->group(function() {
     Route::get('/dashboard', [SgDashboardController::class, 'index'])->name('sg.dashboard');
-    Route::get('/requests', [SgDashboardController::class, 'newRequests'])->name('sg.requests.index');
+    Route::get('/requests', [SgDashboardController::class, 'listRequests'])->name('sg.requests.index');
     Route::patch('/requests/{id}/forward', [SgDashboardController::class, 'forward'])->name('sg.requests.forward');
     Route::post('/logout', [SgLoginController::class, 'logout'])->name('sg.logout');
 });
@@ -94,6 +95,7 @@ Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
     Route::get('/dashboard', [DpafDashboardController::class, 'dashboard'])->name('dpaf.dashboard');
     Route::get('/pending-requests', [DpafDashboardController::class, 'pending'])->name('dpaf.requests.pending');
     Route::get('/authorize', [DpafDashboardController::class, 'authorize'])->name('dpaf.requests.authorize');
+    Route::post('/forward/{id}', [DpafDashboardController::class, 'forward'])->name('dpaf.forward');
     Route::post('/logout', [DpafLoginController::class, 'logout'])->name('dpaf.logout');
     
     // Mot de passe oublié

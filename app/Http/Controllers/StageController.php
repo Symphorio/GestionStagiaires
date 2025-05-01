@@ -89,8 +89,7 @@ class StageController extends Controller
     {
         $demande = DemandeStage::findOrFail($id);
         $demande->update([
-            'statut' => 'transferee_dpaf',
-            'current_step' => 'dpaf'
+            'status' => 'transferee_dpaf' // Uniquement mettre à jour le status
         ]);
         
         return redirect()->route('dashboard.sg')

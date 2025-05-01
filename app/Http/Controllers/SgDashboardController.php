@@ -7,46 +7,69 @@ use Illuminate\Http\Request;
 
 class SgDashboardController extends Controller
 {
-    protected $statusColumn = 'status'; // ou 'statut' selon votre colonne
+    // Colonne de statut confirmée
+    protected $statusColumn = 'status';
 
+    // Statuts utilisés dans le système
+    protected $statusPending = 'en_attente_sg'; // Statut "en attente SG"
+    protected $statusTransferred = 'transferee_dpaf'; // Statut transféré à DPAF
+
+    /**
+     * Affiche le tableau de bord principal
+     */
     public function index()
     {
-        $stats = $this->getDashboardStats();
-        
         return view('sg.dashboard', [
-            'stats' => $stats,
-            'latestRequests' => DemandeStage::where($this->statusColumn, 'en_attente_sg')
-                                ->latest()
-                                ->take(3)
-                                ->get(), // Retirez ->with('stagiaire')
+            'stats' => $this->getDashboardStats(),
+            'latestRequests' => $this->getRequests($this->statusPending, 3),
             'totalRequests' => DemandeStage::count()
         ]);
     }
 
-    public function newRequests()
+    /**
+     * Liste complète des demandes en attente
+     */
+    public function listRequests()
     {
         return view('sg.requests.index', [
-            'requests' => DemandeStage::where($this->statusColumn, 'en_attente_sg')
-                            ->latest()
-                            ->paginate(10)
+            'requests' => $this->getRequests($this->statusPending)
         ]);
     }
 
+    /**
+     * Transfère une demande à la DPAF
+     */
     public function forward(Request $request, $id)
     {
         $demande = DemandeStage::findOrFail($id);
-        $demande->update([$this->statusColumn => 'transferee_dpaf']);
+        $demande->update([
+            $this->statusColumn => $this->statusTransferred
+        ]);
 
         return redirect()
-                ->route('sg.dashboard')
-                ->with('success', 'Demande transférée avec succès à la DPAF');
+            ->route('sg.dashboard')
+            ->with('success', 'Demande transférée avec succès à la DPAF');
     }
 
+    /**
+     * Récupère les demandes selon le statut
+     */
+    protected function getRequests($status, $limit = null)
+    {
+        $query = DemandeStage::where($this->statusColumn, $status)
+            ->latest();
+            
+        return $limit ? $query->take($limit)->get() : $query->get();
+    }
+
+    /**
+     * Calcule les statistiques du dashboard
+     */
     protected function getDashboardStats()
     {
         $total = DemandeStage::count();
-        $pending = DemandeStage::where($this->statusColumn, 'en_attente_sg')->count();
-        $forwarded = DemandeStage::where($this->statusColumn, 'transferee_dpaf')->count();
+        $pending = DemandeStage::where($this->statusColumn, $this->statusPending)->count();
+        $forwarded = DemandeStage::where($this->statusColumn, $this->statusTransferred)->count();
 
         return [
             'pending' => $pending,

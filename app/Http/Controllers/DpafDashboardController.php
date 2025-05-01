@@ -10,12 +10,15 @@ class DpafDashboardController extends Controller
 {
     public function dashboard()
     {
-        $demandes = DemandeStage::with('stagiaire')->get();
+        // Filtrer directement par status au lieu de current_step
+        $demandes = DemandeStage::where('status', 'transferee_dpaf')->get();
         
-        $pendingDPAFDemandes = $demandes->where('status', 'pending_dpaf');
+        // Statistiques
+        $pendingDPAFDemandes = $demandes->where('status', 'transferee_dpaf');
         $departmentAssignedDemandes = $demandes->where('status', 'department_assigned');
-        $totalProcessedByDPAF = $demandes->whereNotIn('status', ['pending_dpaf', 'pending_sg'])->count();
+        $totalProcessedByDPAF = DemandeStage::whereNotIn('status', ['transferee_dpaf', 'pending_sg'])->count();
         
+        // Dernières demandes
         $latestPendingDemandes = $pendingDPAFDemandes
             ->sortByDesc('created_at')
             ->take(3);
