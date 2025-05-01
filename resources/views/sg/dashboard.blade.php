@@ -103,14 +103,14 @@
                                     </div>
                                 @endif
                                 <div class="mt-2 text-sm flex items-center">
-    <span class="font-medium flex items-center">
-        <i class="fas fa-file-pdf text-red-500 mr-2"></i>
-        Lettre :
-    </span> 
-    <span class="text-gray-600 ml-1">
-        Document.pdf
-    </span>
-</div>
+                                <span class="font-medium flex items-center">
+                                    <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+                                    Lettre :
+                                </span> 
+                                <span class="text-gray-600 ml-1">
+                                    Document.pdf
+                                </span>
+                                </div>
                             </div>
                             
                             @if($demande->status === 'en_attente_sg')
@@ -158,7 +158,7 @@
             
             <div class="bg-white rounded-xl shadow-sm border border-slate-200">
                 <div class="p-6">
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('sg.logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border border-red-200 flex items-center justify-center gap-2 rounded-md text-sm font-medium h-10 px-4 py-2">
                             <i class="fas fa-sign-out-alt h-4 w-4 mr-2"></i>

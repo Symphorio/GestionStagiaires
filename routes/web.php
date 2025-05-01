@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\SgRegisterController;
 use App\Http\Controllers\SgDashboardController;
 use App\Http\Controllers\Auth\SrhdsLoginController;
 use App\Http\Controllers\Auth\SrhdsRegisterController;
+use App\Http\Controllers\DpafDashboardController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -90,7 +91,7 @@ Route::prefix('sg')->middleware('auth:sg')->group(function() {
 
 // Espace DPAF (protégé)
 Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
-    Route::get('/', [DpafDashboardController::class, 'index'])->name('dpaf.dashboard');
+    Route::get('/dashboard', [DpafDashboardController::class, 'dashboard'])->name('dpaf.dashboard');
     Route::get('/pending-requests', [DpafDashboardController::class, 'pending'])->name('dpaf.requests.pending');
     Route::get('/authorize', [DpafDashboardController::class, 'authorize'])->name('dpaf.requests.authorize');
     Route::post('/logout', [DpafLoginController::class, 'logout'])->name('dpaf.logout');

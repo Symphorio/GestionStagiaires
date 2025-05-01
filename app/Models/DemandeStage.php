@@ -36,4 +36,9 @@ class DemandeStage extends Model
     {
         return $this->prenom.' '.$this->nom;
     }
+
+    public function stagiaire()
+{
+    return $this->belongsTo(Stagiaire::class);
+}
 }
