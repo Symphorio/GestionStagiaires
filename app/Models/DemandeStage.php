@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // <-- Import manquant
 
 class DemandeStage extends Model
 {
@@ -12,8 +13,8 @@ class DemandeStage extends Model
     protected $table = 'demandes_stage';
 
     protected $fillable = [
-        'prenom', // prénom du stagiaire
-        'nom',     // nom du stagiaire
+        'prenom',
+        'nom',
         'email',
         'telephone',
         'formation',
@@ -21,7 +22,10 @@ class DemandeStage extends Model
         'lettre_motivation_path',
         'date_debut',
         'date_fin',
-        'status',   // assurez-vous que ce champ existe
+        'status',
+        'department_id',
+        'assigned_department',
+        'authorization',
         'authorized_by',
         'authorized_at',
         'rejected_by',
@@ -32,37 +36,40 @@ class DemandeStage extends Model
     protected $casts = [
         'date_debut' => 'date',
         'date_fin' => 'date',
-        'authorized_at',
-        'rejected_at',
+        'authorized_at' => 'datetime',
+        'rejected_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    // Accessor pour le nom complet
     public function getNomCompletAttribute()
     {
+        // Si lié à un stagiaire, utilise ses infos
+        if ($this->stagiaire) {
+            return $this->stagiaire->prenom.' '.$this->stagiaire->nom;
+        }
+        
+        // Sinon utilise les champs directs
         return $this->prenom.' '.$this->nom;
     }
 
-    public function stagiaire()
-{
-    return $this->belongsTo(Stagiaire::class);
-}
+    public function stagiaire(): BelongsTo
+    {
+        return $this->belongsTo(Stagiaire::class, 'stagiaire_id'); // Spécifiez explicitement la clé étrangère
+    }
 
-public function department()
-{
-    return $this->belongsTo(Department::class);
-}
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
 
-// Relation avec le stagiaire qui a autorisé
-public function authorizer()
-{
-    return $this->belongsTo(Stagiaire::class, 'authorized_by');
-}
+    public function authorizer(): BelongsTo
+    {
+        return $this->belongsTo(Stagiaire::class, 'authorized_by');
+    }
 
-// Relation avec le stagiaire qui a rejeté
-public function rejecter() 
-{
-    return $this->belongsTo(Stagiaire::class, 'rejected_by');
-}
+    public function rejecter(): BelongsTo
+    {
+        return $this->belongsTo(Stagiaire::class, 'rejected_by');
+    }
 }

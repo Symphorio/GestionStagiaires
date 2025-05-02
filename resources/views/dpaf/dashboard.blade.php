@@ -126,7 +126,7 @@ use App\Models\DemandeStage; // Ajoutez cette ligne en haut du fichier
                 </div>
                 
                 @if($departmentAssignedCount > 0)
-                    <a href="{{ route('dpaf.authorize') }}" 
+                    <a href="{{ route('dpaf.requests.authorize') }}" 
                        class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 transition-all">
                         <i class="fas fa-tasks mr-2"></i>
                         Gérer les autorisations

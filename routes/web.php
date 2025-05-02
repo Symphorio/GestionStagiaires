@@ -13,6 +13,7 @@ use App\Http\Controllers\SgDashboardController;
 use App\Http\Controllers\Auth\SrhdsLoginController;
 use App\Http\Controllers\Auth\SrhdsRegisterController;
 use App\Http\Controllers\DpafDashboardController;
+use App\Http\Controllers\SrhdsDashboardController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -94,7 +95,6 @@ Route::prefix('sg')->middleware('auth:sg')->group(function() {
 Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
     Route::get('/dashboard', [DpafDashboardController::class, 'dashboard'])->name('dpaf.dashboard');
     Route::get('/pending-requests', [DpafDashboardController::class, 'pendingRequests'])->name('dpaf.requests.pending');
-   // Route::get('/authorize', [DpafDashboardController::class, 'authorize'])->name('dpaf.requests.authorize');
     Route::get('/request/{id}', [DpafDashboardController::class, 'showRequest'])->name('dpaf.request.show');
     Route::post('/forward/{id}', [DpafDashboardController::class, 'forward'])->name('dpaf.forward');
     Route::get('/authorize', [DpafDashboardController::class, 'authorizeRequests'])->name('dpaf.requests.authorize');
@@ -108,14 +108,17 @@ Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
     Route::post('password/reset', [Auth\DpafResetPasswordController::class, 'reset'])->name('dpaf.password.update');
 });
 
-// Espace SRHDS (protégé) - Nouvelle section ajoutée
-Route::prefix('srhds')->middleware('auth:srhds')->group(function () {
-    Route::get('/', [SrhdsDashboardController::class, 'index'])->name('srhds.dashboard');
-    Route::get('/assign', [SrhdsDashboardController::class, 'assign'])->name('srhds.assign');
-    Route::get('/finalize', [SrhdsDashboardController::class, 'finalize'])->name('srhds.finalize');
-    Route::post('/logout', [SrhdsLoginController::class, 'logout'])->name('srhds.logout');
-});
+/// Espace SRHDS (protégé)
+Route::prefix('srhds')->name('srhds.')->middleware('auth:srhds')->group(function () {
+    Route::get('/dashboard', [SrhdsDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/assign', [SrhdsDashboardController::class, 'assign'])->name('assign');
+    Route::post('/assign/{id}', [SrhdsDashboardController::class, 'assignDepartment'])->name('assign.department');
+    Route::get('/request/{id}', [SrhdsDashboardController::class, 'showRequest'])->name('request.show');
+    Route::delete('/assign/{id}', [SrhdsDashboardController::class, 'deleteRequest'])->name('assign.delete');
+    //Route::get('/finalize', [SrhdsDashboardController::class, 'finalize'])->name('finalize');
 
+    Route::post('/logout', [SrhdsLoginController::class, 'logout'])->name('logout');
+});
 Route::fallback(function () {
     return redirect('/');
 });

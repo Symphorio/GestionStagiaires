@@ -14,7 +14,7 @@ use App\Models\DemandeStage;
                 <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="text-lg font-bold">{{ $demande->stagiaire->prenom }} {{ $demande->stagiaire->nom }}</h3>
+                            <h3 class="text-lg font-bold">{{ $demande->prenom }} {{ $demande->nom }}</h3>
                             <p class="text-gray-600">{{ $demande->department->name ?? 'Département non spécifié' }}</p>
                             <p class="text-sm text-gray-500 mt-1">{{ $demande->created_at->format('d/m/Y H:i') }}</p>
                         </div>
@@ -101,14 +101,14 @@ use App\Models\DemandeStage;
 <script>
     let currentRequestId = null;
     let isAuthorizing = false;
+    let signaturePad = null;
     
     function openAuthorizationModal(requestId, authorize) {
         currentRequestId = requestId;
         isAuthorizing = authorize;
         document.getElementById('authorizationModal').classList.remove('hidden');
         
-        // Initialiser le pad de signature si nécessaire
-        if (authorize) {
+        if (authorize && !signaturePad) {
             initSignaturePad();
         }
     }
@@ -122,7 +122,11 @@ use App\Models\DemandeStage;
         formData.append('authorized', authorized);
         formData.append('_token', '{{ csrf_token() }}');
         
-        if (authorized) {
+        if (authorized && signaturePad) {
+            if (signaturePad.isEmpty()) {
+                alert('Veuillez ajouter votre signature');
+                return;
+            }
             const signatureData = signaturePad.toDataURL();
             formData.append('signature', signatureData);
         }
@@ -131,21 +135,25 @@ use App\Models\DemandeStage;
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur réseau');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 window.location.reload();
             } else {
-                alert('Erreur: ' + data.message);
+                alert('Erreur: ' + (data.message || 'Action non effectuée'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            alert('Une erreur est survenue: ' + error.message);
         });
     }
     
-    // Initialisation du pad de signature (nécessite la librairie signature_pad)
-    let signaturePad;
     function initSignaturePad() {
         const canvas = document.createElement('canvas');
         canvas.width = document.getElementById('signaturePad').offsetWidth;
