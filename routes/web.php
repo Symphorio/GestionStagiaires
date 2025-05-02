@@ -94,9 +94,11 @@ Route::prefix('sg')->middleware('auth:sg')->group(function() {
 Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
     Route::get('/dashboard', [DpafDashboardController::class, 'dashboard'])->name('dpaf.dashboard');
     Route::get('/pending-requests', [DpafDashboardController::class, 'pendingRequests'])->name('dpaf.requests.pending');
-    Route::get('/authorize', [DpafDashboardController::class, 'authorize'])->name('dpaf.requests.authorize');
+   // Route::get('/authorize', [DpafDashboardController::class, 'authorize'])->name('dpaf.requests.authorize');
     Route::get('/request/{id}', [DpafDashboardController::class, 'showRequest'])->name('dpaf.request.show');
     Route::post('/forward/{id}', [DpafDashboardController::class, 'forward'])->name('dpaf.forward');
+    Route::get('/authorize', [DpafDashboardController::class, 'authorizeRequests'])->name('dpaf.requests.authorize');
+    Route::post('/authorize/{id}', [DpafDashboardController::class, 'processAuthorization'])->name('dpaf.authorize.process');
     Route::post('/logout', [DpafLoginController::class, 'logout'])->name('dpaf.logout');
     
     // Mot de passe oublié

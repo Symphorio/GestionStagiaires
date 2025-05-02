@@ -60,4 +60,54 @@ class DpafDashboardController extends Controller
 
         return back()->with('success', 'Demande transférée à SRHDS avec succès');
     }
+
+    public function authorizeRequests()
+    {
+        $demandes = DemandeStage::with(['stagiaire', 'department'])
+            ->where('status', 'department_assigned')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('dpaf.authorize', [
+            'demandes' => $demandes
+        ]);
+    }
+
+    public function processAuthorization(Request $request, $id)
+    {
+        $request->validate([
+            'authorized' => 'required|boolean',
+            'signature' => 'required_if:authorized,true'
+        ]);
+    
+        $demande = DemandeStage::findOrFail($id);
+        $stagiaireId = auth()->id(); // Ou la logique pour obtenir l'ID du stagiaire
+    
+        if ($request->authorized) {
+            $demande->update([
+                'status' => 'authorized',
+                'authorized_by' => $stagiaireId,
+                'authorized_at' => now(),
+                'signature' => $request->signature,
+                'rejected_by' => null,
+                'rejected_at' => null
+            ]);
+            $message = 'Demande autorisée avec signature';
+        } else {
+            $demande->update([
+                'status' => 'rejected',
+                'rejected_by' => $stagiaireId,
+                'rejected_at' => now(),
+                'authorized_by' => null,
+                'authorized_at' => null,
+                'signature' => null
+            ]);
+            $message = 'Demande refusée';
+        }
+    
+        // Transférer à SRHDS dans les deux cas
+        $demande->update(['status' => 'srhds']);
+    
+        return back()->with('success', $message);
+    }
 }
