@@ -93,8 +93,9 @@ Route::prefix('sg')->middleware('auth:sg')->group(function() {
 // Espace DPAF (protégé)
 Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
     Route::get('/dashboard', [DpafDashboardController::class, 'dashboard'])->name('dpaf.dashboard');
-    Route::get('/pending-requests', [DpafDashboardController::class, 'pending'])->name('dpaf.requests.pending');
+    Route::get('/pending-requests', [DpafDashboardController::class, 'pendingRequests'])->name('dpaf.requests.pending');
     Route::get('/authorize', [DpafDashboardController::class, 'authorize'])->name('dpaf.requests.authorize');
+    Route::get('/request/{id}', [DpafDashboardController::class, 'showRequest'])->name('dpaf.request.show');
     Route::post('/forward/{id}', [DpafDashboardController::class, 'forward'])->name('dpaf.forward');
     Route::post('/logout', [DpafLoginController::class, 'logout'])->name('dpaf.logout');
     

@@ -33,19 +33,31 @@ class DpafDashboardController extends Controller
     
     public function pendingRequests()
     {
-        // Implémentation pour voir toutes les demandes en attente
-    }
+        // Version corrigée avec les statuts possibles et relations
+        $demandes = DemandeStage::with(['stagiaire'])
+            ->whereIn('status', ['pending_dpaf', 'transferee_dpaf']) // Les deux statuts possibles
+            ->orderBy('created_at', 'desc')
+            ->get();
     
-    public function authorizeRequests()
+        // Debug: Vérifiez les données récupérées
+        \Log::debug('Demandes récupérées:', $demandes->toArray());
+    
+        return view('dpaf.requests-pending', [
+            'demandes' => $demandes
+        ]);
+    }
+
+    public function showRequest($id)
     {
-        // Implémentation pour gérer les autorisations
+        $demande = DemandeStage::findOrFail($id);
+        return view('dpaf.request-show', ['demande' => $demande]);
     }
-    
+
     public function forward($id)
     {
         $demande = DemandeStage::findOrFail($id);
         $demande->update(['status' => 'srhds']);
-        
+
         return back()->with('success', 'Demande transférée à SRHDS avec succès');
     }
 }
