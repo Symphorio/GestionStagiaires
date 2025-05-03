@@ -8,6 +8,14 @@ use Illuminate\Support\Facades\Auth;
 
 class DpafLoginController extends Controller
 {
+    protected $guard = 'dpaf';
+
+    public function __construct()
+    {
+        $this->middleware('guest:'.$this->guard)->except('logout');
+        $this->guard = 'dpaf'; // Adaptez pour chaque contrôleur
+    }
+
     public function showLoginForm()
     {
         return view('auth.dpaf_login');
@@ -32,10 +40,10 @@ class DpafLoginController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::guard('dpaf')->logout();
+        Auth::guard($this->guard)->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/dpaf/login');
+        return redirect('/welcome');
     }
 
     public function redirectTo()

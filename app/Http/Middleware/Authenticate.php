@@ -12,10 +12,23 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
 {
-    if (! $request->expectsJson()) {
-        if (auth()->guard('stagiaire')->check()) {
-            return route('stagiaire.dashboard');
+    if (!$request->expectsJson()) {
+        if ($request->is('stagiaire/*')) {
+            return route('stagiaire.login');
         }
+
+        if ($request->is('dpaf/*')) {
+            return route('dpaf.login');
+        }
+
+        if ($request->is('sg/*')) {
+            return route('sg.login');
+        }
+
+        if ($request->is('srhds/*')) {
+            return route('srhds.login');
+        }
+
         return route('login');
     }
 }

@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationStageMail;
+use Illuminate\Support\Str;
 
 class DpafDashboardController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth:stagiaire');
     }
 
     public function dashboard()
@@ -83,35 +84,48 @@ class DpafDashboardController extends Controller
                 if (!preg_match('/^data:image\/(png|jpeg|gif);base64,/', $signatureData)) {
                     throw new \Exception('Format de signature invalide');
                 }
-    
-                // Créer le dossier s'il n'existe pas
+
+                if ($demande->signature_path && Storage::disk('public')->exists($demande->signature_path)) {
+                    Storage::disk('public')->delete($demande->signature_path);
+                }
+
+                $internCode = 'STG-' . strtoupper(Str::random(6));
                 Storage::disk('public')->makeDirectory('signatures');
                 
-                // Générer un nom de fichier unique
                 $fileName = 'signatures/sign_'.$demande->id.'_'.time().'.png';
-                
-                // Enregistrer l'image
                 $imageData = base64_decode(preg_replace('/^data:image\/(png|jpeg|gif);base64,/', '', $signatureData));
                 Storage::disk('public')->put($fileName, $imageData);
-    
+
                 $demande->update([
                     'status' => 'approved',
                     'signature_path' => $fileName,
-                    'authorized_by' => auth()->id(),
-                    'authorized_at' => now()
+                    'authorized_by' => auth('stagiaire')->id(),
+                    'authorized_at' => now(),
+                    'intern_code' => $internCode
                 ]);
-    
-                Mail::to($demande->email)->send(new ConfirmationStageMail($demande));
-    
-                return redirect()->route('dpaf.authorize')->with('success', 'Demande approuvée avec succès');
+
+                if ($demande->stagiaire) {
+                    $demande->stagiaire->update([
+                        'intern_id' => $internCode
+                    ]);
+                }
+
+                Mail::to($demande->email)->send(new ConfirmationStageMail($demande, $internCode));
+
+                return redirect()->route('dpaf.authorize')
+                               ->with([
+                                   'success' => 'Demande de '.$demande->prenom.' '.$demande->nom.' approuvée avec succès',
+                                   'intern_code' => $internCode,
+                                   'email' => $demande->email
+                               ]);
                 
             } else {
                 $demande->update([
                     'status' => 'rejected',
-                    'rejected_by' => auth()->id(),
+                    'rejected_by' => auth('stagiaire')->id(),
                     'rejected_at' => now()
                 ]);
-    
+
                 return redirect()->route('dpaf.authorize')->with('success', 'Demande refusée');
             }
         } catch (\Exception $e) {
@@ -120,12 +134,17 @@ class DpafDashboardController extends Controller
     }
 
     public function destroy(DemandeStage $demande)
-{
-    if ($demande->signature_path) {
-        Storage::disk('public')->delete($demande->signature_path);
+    {
+        try {
+            if ($demande->signature_path && Storage::disk('public')->exists($demande->signature_path)) {
+                Storage::disk('public')->delete($demande->signature_path);
+            }
+            
+            $demande->delete();
+            
+            return back()->with('success', 'Demande supprimée avec succès');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors de la suppression: '.$e->getMessage());
+        }
     }
-    $demande->delete();
-    
-    return back()->with('success', 'Demande supprimée');
-}
 }

@@ -26,6 +26,7 @@ class DemandeStage extends Model
         'department_id',
         'assigned_department',
         'authorization',
+        'intern_code',
         'signature_path',
         'authorized_by',
         'authorized_at',
@@ -63,13 +64,21 @@ class DemandeStage extends Model
         return $this->belongsTo(Department::class);
     }
 
-    public function authorizer(): BelongsTo
+    public function authorizer()
     {
         return $this->belongsTo(Stagiaire::class, 'authorized_by');
     }
 
-    public function rejecter(): BelongsTo
+    public function rejecter()
     {
         return $this->belongsTo(Stagiaire::class, 'rejected_by');
     }
+
+    public function getSignatureUrlAttribute()
+{
+    if (!$this->signature_path) {
+        return null;
+    }
+    return Storage::url($this->signature_path);
+}
 }
