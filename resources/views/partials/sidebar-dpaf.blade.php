@@ -2,7 +2,7 @@
     $navigationLinks = [
         ['name' => 'Tableau de bord', 'path' => route('dpaf.dashboard'), 'icon' => 'grid'],
         ['name' => 'Demandes à traiter', 'path' => route('dpaf.requests.pending'), 'icon' => 'inbox'],
-        ['name' => 'Autoriser des demandes', 'path' => route('dpaf.requests.authorize'), 'icon' => 'check-circle']
+        ['name' => 'Autoriser des demandes', 'path' => route('dpaf.authorize'), 'icon' => 'check-circle']
     ];
     $currentPath = url()->current();
 @endphp

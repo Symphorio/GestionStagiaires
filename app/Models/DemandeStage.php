@@ -26,11 +26,11 @@ class DemandeStage extends Model
         'department_id',
         'assigned_department',
         'authorization',
+        'signature_path',
         'authorized_by',
         'authorized_at',
         'rejected_by',
         'rejected_at',
-        'signature'
     ];
 
     protected $casts = [

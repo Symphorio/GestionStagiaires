@@ -4,36 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\DemandeStage;
 use App\Models\Department;
-use App\Models\Stagiaire;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ConfirmationStageMail;
 
 class DpafDashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function dashboard()
     {
-        // Utilisation de with() pour charger les relations
         $demandes = DemandeStage::with(['stagiaire', 'department'])
             ->where('status', 'transferee_dpaf')
             ->get();
-        
-        // Statistiques avec whereHas pour les requêtes sur les départements
+
         $pendingDPAFDemandes = $demandes->where('status', 'transferee_dpaf');
+        $departmentAssignedDemandes = DemandeStage::where('status', 'department_assigned')->get();
+        $totalProcessedByDPAF = DemandeStage::whereNotIn('status', ['transferee_dpaf', 'pending_sg'])->count();
         
-        $departmentAssignedDemandes = DemandeStage::with('department')
-            ->where('status', 'department_assigned')
-            ->get();
-            
-        $totalProcessedByDPAF = DemandeStage::whereNotIn('status', ['transferee_dpaf', 'pending_sg'])
-            ->count();
-        
-        // Dernières demandes avec tri et eager loading
         $latestPendingDemandes = DemandeStage::with('department')
             ->where('status', 'transferee_dpaf')
             ->orderBy('created_at', 'desc')
             ->take(3)
             ->get();
-            
+
         return view('dpaf.dashboard', [
             'pendingDPAFDemandes' => $pendingDPAFDemandes,
             'departmentAssignedDemandes' => $departmentAssignedDemandes,
@@ -41,119 +39,93 @@ class DpafDashboardController extends Controller
             'latestPendingDemandes' => $latestPendingDemandes,
         ]);
     }
-    
-    public function pendingRequests()
-    {
-        // Version optimisée avec eager loading et whereHas
-        $demandes = DemandeStage::with(['stagiaire', 'department'])
-            ->whereIn('status', ['pending_dpaf', 'transferee_dpaf'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-    
-        \Log::debug('Demandes récupérées:', $demandes->toArray());
-    
-        return view('dpaf.requests-pending', [
-            'demandes' => $demandes
-        ]);
-    }
-
-    public function showRequest($id)
-    {
-        // Chargement des relations nécessaires
-        $demande = DemandeStage::with(['stagiaire', 'department'])
-            ->findOrFail($id);
-            
-        return view('dpaf.request-show', [
-            'demande' => $demande,
-            'departments' => Department::all() // Pour l'assignation si nécessaire
-        ]);
-    }
-
-    public function forward($id)
-    {
-        $demande = DemandeStage::findOrFail($id);
-        $demande->update([
-            'status' => 'pending_srhds' // Statut cohérent pour le SRHDS
-        ]);
-    
-        return back()->with('success', 'Demande transférée à SRHDS avec succès');
-    }
 
     public function authorizeRequests()
     {
-        $demandes = DemandeStage::with(['department']) // On ne charge pas stagiaire car il n'existe pas encore
-            ->where('status', 'department_assigned')
-            ->orderBy('created_at', 'desc')
-            ->get();
-    
+        $demandes = DemandeStage::where('status', 'department_assigned')
+                      ->whereNotNull('department_id')
+                      ->with('department')
+                      ->orderBy('created_at', 'desc')
+                      ->get();
+
+        $hasPendingWithoutDepartment = DemandeStage::where('status', 'transferee_dpaf')
+                                          ->whereNull('department_id')
+                                          ->exists();
+
         return view('dpaf.authorize', [
-            'demandes' => $demandes
+            'demandes' => $demandes,
+            'hasPendingWithoutDepartment' => $hasPendingWithoutDepartment
         ]);
     }
 
-    public function processAuthorization(Request $request, $id)
+    public function showSignaturePad($id)
+    {
+        $demande = DemandeStage::with('department')->findOrFail($id);
+
+        if ($demande->status !== 'department_assigned' || empty($demande->department_id)) {
+            abort(403, 'Cette demande ne peut pas être autorisée');
+        }
+
+        return view('dpaf.signature', compact('demande'));
+    }
+
+    public function processAuthorization(Request $request, DemandeStage $demande)
     {
         $request->validate([
-            'authorized' => 'required|boolean',
-            'signature' => 'required_if:authorized,true'
+            'action' => 'required|in:approve,reject',
+            'signature' => 'required_if:action,approve|string'
         ]);
     
-        $demande = DemandeStage::findOrFail($id);
-        $currentUserId = auth()->id();
+        try {
+            if ($request->action === 'approve') {
+                $signatureData = $request->signature;
+                
+                if (!preg_match('/^data:image\/(png|jpeg|gif);base64,/', $signatureData)) {
+                    throw new \Exception('Format de signature invalide');
+                }
     
-        if ($request->authorized) {
-            // Création/liaison du stagiaire seulement si la demande est autorisée
-            $stagiaire = Stagiaire::firstOrCreate(
-                ['email' => $demande->email],
-                [
-                    'prenom' => $demande->prenom,
-                    'nom' => $demande->nom,
-                    'telephone' => $demande->telephone,
-                    'formation' => $demande->formation,
-                    // Ajoutez ici d'autres champs si nécessaire
-                ]
-            );
-
-            $demande->update([
-                'status' => 'authorized',
-                'stagiaire_id' => $stagiaire->id, // Lie la demande au stagiaire
-                'authorized_by' => $currentUserId,
-                'authorized_at' => now(),
-                'signature' => $request->signature,
-                'rejected_by' => null,
-                'rejected_at' => null,
-            ]);
-            
-            $message = 'Demande autorisée avec signature';
-        } else {
-            $demande->update([
-                'status' => 'rejected',
-                'rejected_by' => $currentUserId,
-                'rejected_at' => now(),
-                'authorized_by' => null,
-                'authorized_at' => null,
-                'signature' => null
-            ]);
-            $message = 'Demande refusée';
+                // Créer le dossier s'il n'existe pas
+                Storage::disk('public')->makeDirectory('signatures');
+                
+                // Générer un nom de fichier unique
+                $fileName = 'signatures/sign_'.$demande->id.'_'.time().'.png';
+                
+                // Enregistrer l'image
+                $imageData = base64_decode(preg_replace('/^data:image\/(png|jpeg|gif);base64,/', '', $signatureData));
+                Storage::disk('public')->put($fileName, $imageData);
+    
+                $demande->update([
+                    'status' => 'approved',
+                    'signature_path' => $fileName,
+                    'authorized_by' => auth()->id(),
+                    'authorized_at' => now()
+                ]);
+    
+                Mail::to($demande->email)->send(new ConfirmationStageMail($demande));
+    
+                return redirect()->route('dpaf.authorize')->with('success', 'Demande approuvée avec succès');
+                
+            } else {
+                $demande->update([
+                    'status' => 'rejected',
+                    'rejected_by' => auth()->id(),
+                    'rejected_at' => now()
+                ]);
+    
+                return redirect()->route('dpaf.authorize')->with('success', 'Demande refusée');
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur: '.$e->getMessage());
         }
-    
-        return back()->with('success', $message);
     }
 
-    // Méthode supplémentaire pour filtrer par département
-    public function byDepartment($departmentId)
-    {
-        $demandes = DemandeStage::with(['stagiaire', 'department'])
-            ->whereHas('department', function($query) use ($departmentId) {
-                $query->where('id', $departmentId);
-            })
-            ->where('status', 'transferee_dpaf')
-            ->orderBy('created_at', 'desc')
-            ->get();
-            
-        return view('dpaf.requests-pending', [
-            'demandes' => $demandes,
-            'department' => Department::find($departmentId)
-        ]);
+    public function destroy(DemandeStage $demande)
+{
+    if ($demande->signature_path) {
+        Storage::disk('public')->delete($demande->signature_path);
     }
+    $demande->delete();
+    
+    return back()->with('success', 'Demande supprimée');
+}
 }

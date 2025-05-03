@@ -97,8 +97,9 @@ Route::prefix('dpaf')->middleware('auth:dpaf')->group(function() {
     Route::get('/pending-requests', [DpafDashboardController::class, 'pendingRequests'])->name('dpaf.requests.pending');
     Route::get('/request/{id}', [DpafDashboardController::class, 'showRequest'])->name('dpaf.request.show');
     Route::post('/forward/{id}', [DpafDashboardController::class, 'forward'])->name('dpaf.forward');
-    Route::get('/authorize', [DpafDashboardController::class, 'authorizeRequests'])->name('dpaf.requests.authorize');
-    Route::post('/authorize/{id}', [DpafDashboardController::class, 'processAuthorization'])->name('dpaf.authorize.process');
+    Route::get('/authorize', [DpafDashboardController::class, 'authorizeRequests'])->name('dpaf.authorize');
+        Route::get('/demandes/{demande}/signature', [DpafDashboardController::class, 'showSignaturePad'])->name('dpaf.demandes.signature');
+        Route::post('/demandes/{demande}/authorize', [DpafDashboardController::class, 'processAuthorization'])->name('dpaf.demandes.authorize');
     Route::post('/logout', [DpafLoginController::class, 'logout'])->name('dpaf.logout');
     
     // Mot de passe oublié
