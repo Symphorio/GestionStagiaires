@@ -17,10 +17,6 @@ class Authenticate extends Middleware
             return route('stagiaire.login');
         }
 
-        if ($request->is('dpaf/*')) {
-            return route('dpaf.login');
-        }
-
         if ($request->is('sg/*')) {
             return route('sg.login');
         }

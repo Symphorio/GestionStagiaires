@@ -6,30 +6,30 @@ return [
         'passwords' => 'users',
     ],
 
- 'guards' => [
+'guards' => [
     'web' => [
         'driver' => 'session',
         'provider' => 'users',
     ],
+
     'stagiaire' => [
         'driver' => 'session',
         'provider' => 'stagiaires',
     ],
+
     'sg' => [
         'driver' => 'session',
         'provider' => 'sgs',
     ],
+
+    'srhds' => [
+        'driver' => 'session',
+        'provider' => 'srhdss',
+    ],
+
     'dpaf' => [
         'driver' => 'session',
         'provider' => 'dpafs',
-    ],
-    'srhds' => [
-        'driver' => 'session',
-        'provider' => 'srhds',
-    ],
-    'tuteur' => [
-        'driver' => 'session',
-        'provider' => 'tuteurs',
     ],
 ],
 
@@ -38,27 +38,28 @@ return [
         'driver' => 'eloquent',
         'model' => App\Models\User::class,
     ],
+
     'stagiaires' => [
         'driver' => 'eloquent',
         'model' => App\Models\Stagiaire::class,
     ],
+
     'sgs' => [
         'driver' => 'eloquent',
         'model' => App\Models\Sg::class,
     ],
+
+    'srhdss' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Srhds::class,
+    ],
+
     'dpafs' => [
         'driver' => 'eloquent',
         'model' => App\Models\Dpaf::class,
     ],
-    'srhds' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\Srhds::class,
-    ],
-    'tuteurs' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\Tuteur::class,
-    ],
 ],
+
 
     'passwords' => [
         'users' => [

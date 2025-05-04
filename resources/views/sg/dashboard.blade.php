@@ -158,7 +158,7 @@
             
             <div class="bg-white rounded-xl shadow-sm border border-slate-200">
                 <div class="p-6">
-                    <form action="{{ route('sg.logout') }}" method="POST">
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border border-red-200 flex items-center justify-center gap-2 rounded-md text-sm font-medium h-10 px-4 py-2">
                             <i class="fas fa-sign-out-alt h-4 w-4 mr-2"></i>

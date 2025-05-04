@@ -66,11 +66,5 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\CheckRole::class,
         'auth.custom' => \App\Http\Middleware\AuthenticateCustom::class,
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.stagiaire' => \App\Http\Middleware\RedirectIfNotStagiaire::class,
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth:dpaf' => \App\Http\Middleware\Authenticate::class,
-        'auth:sg' => \App\Http\Middleware\Authenticate::class,
-        'auth:srhds' => \App\Http\Middleware\Authenticate::class,
     ];
 }
