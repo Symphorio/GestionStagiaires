@@ -32,6 +32,8 @@ class DemandeStage extends Model
         'authorized_at',
         'rejected_by',
         'rejected_at',
+        'account_created', // Ajoutez cette ligne
+        'stagiaire_id', // Ajoutez cette ligne si vous avez une relation avec Stagiaire
     ];
 
     protected $casts = [
@@ -41,6 +43,7 @@ class DemandeStage extends Model
         'rejected_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'account_created' => 'boolean', // Ajoutez cette ligne
     ];
 
     public function getNomCompletAttribute()
