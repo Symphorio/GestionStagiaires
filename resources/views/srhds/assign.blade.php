@@ -23,16 +23,16 @@
                         </a>
                         <form action="{{ route('srhds.assign.department', $demande->id) }}" method="POST">
                             @csrf
-                            <select name="department_id" class="rounded border-gray-300 mr-2">
+                            <select name="department_id" class="rounded border-gray-300 mr-2" required>
                                 <option value="">Choisir un département</option>
                                 @foreach($departments as $department)
-                                    <option value="{{ $department->id }}" {{ $demande->department_id == $department->id ? 'selected' : '' }}>
+                                    <option value="{{ $department->id }}">
                                         {{ $department->name }}
                                     </option>
                                 @endforeach
                             </select>
                             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                                Assigner
+                                Assigner et transférer
                             </button>
                         </form>
                     </div>

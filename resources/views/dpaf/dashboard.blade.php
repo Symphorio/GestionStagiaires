@@ -1,5 +1,5 @@
 @php
-use App\Models\DemandeStage; // Ajoutez cette ligne en haut du fichier
+use App\Models\DemandeStage;
 @endphp
 
 @extends('layouts.dpaf')
@@ -94,7 +94,7 @@ use App\Models\DemandeStage; // Ajoutez cette ligne en haut du fichier
                                     @csrf
                                     <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
                                         <i class="fas fa-share mr-1.5"></i>
-                                        Transférer
+                                        Transférer au SRHDS
                                     </button>
                                 </form>
                             @endif

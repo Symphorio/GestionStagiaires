@@ -46,7 +46,7 @@
             @enderror
         </div>
         
-        <!--<div class="space-y-2">
+        <div class="space-y-2">
             <label for="intern_id" class="text-sm font-medium">ID Stagiaire</label>
             <input 
                 type="text"
@@ -61,7 +61,7 @@
             @error('intern_id')
                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
             @enderror
-        </div>-->
+        </div>
         
         <div class="space-y-2">
             <label for="password" class="text-sm font-medium">Mot de passe</label>

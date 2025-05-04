@@ -90,11 +90,12 @@ class DpafDashboardController extends Controller
     public function showSignaturePad($id)
     {
         $demande = DemandeStage::with('department')->findOrFail($id);
-
-        if ($demande->status !== 'department_assigned' || empty($demande->department_id)) {
+    
+        // Conditions plus flexibles pour permettre l'accès après signature
+        if (!in_array($demande->status, ['department_assigned', 'approved'])) {
             abort(403, 'Cette demande ne peut pas être autorisée');
         }
-
+    
         return view('dpaf.signature', compact('demande'));
     }
 

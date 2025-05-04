@@ -11,18 +11,11 @@
             <p class="text-sm text-gray-500">Demandes en attente d'assignation</p>
         </div>
         
-        <!-- Carte: Demandes autorisées -->
+        <!-- Carte: Demandes traitées -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-sm font-medium text-gray-500">Demandes autorisées</h3>
-            <p class="text-2xl font-bold">{{ $authorizedRequests->count() }}</p>
-            <p class="text-sm text-gray-500">Demandes avec autorisation DPAF</p>
-        </div>
-        
-        <!-- Carte: Demandes finalisées -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-            <h3 class="text-sm font-medium text-gray-500">Demandes finalisées</h3>
+            <h3 class="text-sm font-medium text-gray-500">Demandes traitées</h3>
             <p class="text-2xl font-bold">{{ $approvedRequests->count() }}</p>
-            <p class="text-sm text-gray-500">Demandes approuvées et finalisées</p>
+            <p class="text-sm text-gray-500">Demandes avec département assigné</p>
         </div>
     </div>
     
@@ -35,8 +28,9 @@
                     <div class="mb-4 border-b pb-4 last:border-b-0">
                         <div class="flex justify-between items-start">
                             <div>
-                                <h3 class="font-medium">{{ $request->student_name }}</h3>
+                                <h3 class="font-medium">{{ $request->prenom }} {{ $request->nom }}</h3>
                                 <p class="text-sm text-gray-500">{{ $request->created_at->format('d/m/Y H:i') }}</p>
+                                <p class="text-sm text-gray-500">{{ $request->formation }}</p>
                             </div>
                             <a href="{{ route('srhds.request.show', $request->id) }}" class="text-blue-500 hover:text-blue-700 text-sm font-medium">
                                 Voir
@@ -67,18 +61,6 @@
                         <a href="{{ route('srhds.assign') }}" class="mt-2 block">
                             <button type="button" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200">
                                 Assigner départements
-                            </button>
-                        </a>
-                    </div>
-                @endif
-                
-                @if($authorizedRequests->count() > 0)
-                    <div class="mt-4">
-                        <h3 class="text-sm font-medium text-gray-500">À finaliser</h3>
-                        <p class="text-2xl font-bold">{{ $authorizedRequests->count() }}</p>
-                        <a href="{{ route('srhds.finalize') }}" class="mt-2 block">
-                            <button type="button" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                                Finaliser demandes
                             </button>
                         </a>
                     </div>

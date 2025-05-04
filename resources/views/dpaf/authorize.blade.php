@@ -1,4 +1,3 @@
-{{-- resources/views/dpaf/authorize.blade.php --}}
 @extends('layouts.dpaf')
 
 @section('content')
@@ -34,16 +33,8 @@
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
                     <div class="p-4 border-b flex justify-between items-center">
                         <h3 class="text-lg font-medium">{{ $demande->prenom }} {{ $demande->nom }}</h3>
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                              {{ $demande->status === 'approved' ? 'bg-green-100 text-green-800' : 
-                                 ($demande->status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
-                            @if($demande->status === 'approved')
-                                Approuvée
-                            @elseif($demande->status === 'rejected')
-                                Rejetée
-                            @else
-                                En attente
-                            @endif
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            En attente d'autorisation
                         </span>
                     </div>
                     
@@ -65,12 +56,6 @@
                                 <span class="font-semibold">Département:</span> 
                                 {{ $demande->department->name ?? 'Non spécifié' }}
                             </div>
-                            @if($demande->intern_code)
-                            <div class="col-span-2">
-                                <span class="font-semibold">Code stagiaire:</span> 
-                                <span class="font-mono">{{ $demande->intern_code }}</span>
-                            </div>
-                            @endif
                         </div>
                         
                         @if($demande->lettre_motivation_path)
@@ -81,30 +66,13 @@
                             </a>
                         </div>
                         @endif
-
-                        @if($demande->signature_path)
-                        <div>
-                            <span class="font-semibold">Signature:</span>
-                            <img src="{{ Storage::url($demande->signature_path) }}" alt="Signature" class="h-16 mt-2 border rounded">
-                        </div>
-                        @endif
                     </div>
                     
                     <div class="px-4 py-3 bg-gray-50 border-t flex justify-end space-x-2">
-                        @if($demande->status === 'department_assigned')
-                            <a href="{{ route('dpaf.demandes.signature', $demande->id) }}" 
-                               class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                                Signer et Autoriser
-                            </a>
-                        @endif
-                        <form action="{{ route('dpaf.demandes.destroy', $demande->id) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')">
-                                Supprimer
-                            </button>
-                        </form>
+                        <a href="{{ route('dpaf.demandes.signature', $demande->id) }}" 
+                           class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                            Signer et Autoriser
+                        </a>
                     </div>
                 </div>
             @endforeach
