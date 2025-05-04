@@ -1,6 +1,5 @@
 <?php
 
-// app/Http/Controllers/Auth/SgLoginController.php
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -9,8 +8,18 @@ use Illuminate\Support\Facades\Auth;
 
 class SgLoginController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('guest:sg')->except('logout');
+    }
+
     public function showLoginForm()
     {
+        // Force la déconnexion des autres guards
+        Auth::guard('stagiaire')->logout();
+        Auth::guard('dpaf')->logout();
+        Auth::guard('srhds')->logout();
+        
         return view('auth.sg_login');
     }
 
@@ -22,6 +31,7 @@ class SgLoginController extends Controller
         ]);
 
         if (Auth::guard('sg')->attempt($credentials, $request->remember)) {
+            $request->session()->regenerate();
             return redirect()->intended(route('sg.dashboard'));
         }
 
@@ -30,9 +40,23 @@ class SgLoginController extends Controller
         ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::guard('sg')->logout();
-        return redirect('/sg/login');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        return redirect('/sg/login')
+            ->withHeaders([
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
+                'Pragma' => 'no-cache',
+                'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT'
+            ]);
+    }
+
+
+    public function redirectTo()
+    {
+        return route('sg.dashboard');
     }
 }

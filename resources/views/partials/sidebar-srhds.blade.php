@@ -30,7 +30,7 @@
 
     <!-- Déconnexion (toujours en bas) -->
     <div class="p-4 border-t border-gray-700 mt-auto">
-        <form action="{{ route('srhds.logout') }}" method="POST">
+        <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="w-full flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors">
                 <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>

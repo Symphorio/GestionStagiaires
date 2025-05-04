@@ -43,7 +43,7 @@
     
     <!-- Bouton de déconnexion -->
     <div class="p-4 border-t">
-        <form action="{{ route('sg.logout') }}" method="POST">
+        <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button 
                 type="submit"

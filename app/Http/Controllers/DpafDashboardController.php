@@ -14,7 +14,15 @@ class DpafDashboardController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:stagiaire');
+        $this->middleware('auth:dpaf');
+        
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+            
+            return $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
+                           ->header('Pragma', 'no-cache')
+                           ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+        });
     }
 
     public function dashboard()
@@ -41,18 +49,38 @@ class DpafDashboardController extends Controller
         ]);
     }
 
+    public function forward(Request $request, $id)
+    {
+        $demande = DemandeStage::findOrFail($id);
+        
+        // Validez que la demande peut être transférée
+        if ($demande->status !== 'transferee_dpaf') {
+            return back()->with('error', 'Cette demande ne peut pas être transférée');
+        }
+    
+        // Mettez à jour le statut pour SRHDS
+        $demande->update([
+            'status' => 'pending_srhds', // Changé de 'department_assigned' à 'pending_srhds'
+            'forwarded_at' => now(),
+            'forwarded_by' => auth('dpaf')->id()
+        ]);
+    
+        return back()->with('success', 'Demande transférée au SRHDS avec succès');
+    }
+
     public function authorizeRequests()
     {
+        // Seules les demandes avec département assigné et statut 'department_assigned'
         $demandes = DemandeStage::where('status', 'department_assigned')
                       ->whereNotNull('department_id')
                       ->with('department')
                       ->orderBy('created_at', 'desc')
                       ->get();
-
-        $hasPendingWithoutDepartment = DemandeStage::where('status', 'transferee_dpaf')
+    
+        $hasPendingWithoutDepartment = DemandeStage::where('status', 'pending_srhds')
                                           ->whereNull('department_id')
                                           ->exists();
-
+    
         return view('dpaf.authorize', [
             'demandes' => $demandes,
             'hasPendingWithoutDepartment' => $hasPendingWithoutDepartment

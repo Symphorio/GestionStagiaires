@@ -13,11 +13,16 @@ class DpafLoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest:'.$this->guard)->except('logout');
-        $this->guard = 'dpaf'; // Adaptez pour chaque contrôleur
+        $this->guard = 'dpaf';
     }
 
     public function showLoginForm()
     {
+        // Force la déconnexion de tous les guards avant d'afficher le formulaire
+        Auth::guard('stagiaire')->logout();
+        Auth::guard('sg')->logout();
+        Auth::guard('srhds')->logout();
+        
         return view('auth.dpaf_login');
     }
 
@@ -43,7 +48,14 @@ class DpafLoginController extends Controller
         Auth::guard($this->guard)->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/welcome');
+        
+        // Ajout d'en-têtes pour empêcher la mise en cache
+        return redirect('/')
+            ->withHeaders([
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
+                'Pragma' => 'no-cache',
+                'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT'
+            ]);
     }
 
     public function redirectTo()

@@ -80,7 +80,9 @@ Route::middleware('guest')->group(function () {
 | Déconnexion (auth requis)
 |--------------------------------------------------------------------------
 */
-Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware(['auth:stagiaire,sg,dpaf,srhds'])
+    ->name('logout');
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +133,8 @@ Route::prefix('dpaf')->name('dpaf.')->middleware('auth:dpaf')->group(function ()
     Route::get('/authorize', [DpafDashboardController::class, 'authorizeRequests'])->name('authorize');
     Route::get('/demandes/{demande}/signature', [DpafDashboardController::class, 'showSignaturePad'])->name('demandes.signature');
     Route::post('/demandes/{demande}/authorize', [DpafDashboardController::class, 'processAuthorization'])->name('demandes.authorize');
+    Route::delete('/demandes/{demande}', [DpafDashboardController::class, 'destroy'])
+    ->name('demandes.destroy');
     Route::post('/logout', [DpafLoginController::class, 'logout'])->name('logout');
 });
 

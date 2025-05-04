@@ -30,7 +30,7 @@
     
     <!-- Logout -->
     <div class="p-4 border-t">
-        <form action="{{ route('dpaf.logout') }}" method="POST">
+        <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="w-full flex items-center p-3 text-gray-600 rounded-lg hover:bg-gray-100">
                 <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>

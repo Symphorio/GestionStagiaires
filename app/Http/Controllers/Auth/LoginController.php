@@ -18,6 +18,7 @@ class LoginController extends Controller
         // Force la déconnexion de tous les guards avant d'afficher le formulaire
         Auth::guard('sg')->logout();
         Auth::guard('dpaf')->logout();
+        Auth::guard('srhds')->logout();
         
         return view('auth.login');
     }
@@ -31,6 +32,7 @@ class LoginController extends Controller
     
         // ONLY stagiaire guard
         if (Auth::guard('stagiaire')->attempt($credentials)) {
+            $request->session()->regenerate();
             return redirect()->route('stagiaire.dashboard');
         }
     
@@ -43,6 +45,14 @@ class LoginController extends Controller
     {
         Auth::guard('stagiaire')->logout();
         $request->session()->invalidate();
-        return redirect('/');
+        $request->session()->regenerateToken();
+        
+        // Ajout d'en-têtes pour empêcher la mise en cache
+        return redirect('/')
+            ->withHeaders([
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
+                'Pragma' => 'no-cache',
+                'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT'
+            ]);
     }
 }

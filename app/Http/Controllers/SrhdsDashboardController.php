@@ -13,6 +13,16 @@ class SrhdsDashboardController extends Controller
 
     public function __construct()
     {
+        $this->middleware('auth:srhds');
+        
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+            
+            return $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
+                           ->header('Pragma', 'no-cache')
+                           ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+        });
+
         $this->departments = Department::all();
     }
 
@@ -60,15 +70,15 @@ class SrhdsDashboardController extends Controller
         $request->validate([
             'department_id' => 'required|exists:departments,id'
         ]);
-
+    
         $demande = DemandeStage::findOrFail($id);
         $demande->update([
             'department_id' => $request->department_id,
-            'status' => 'department_assigned'
+            'status' => 'department_assigned' // Ce statut sera utilisé par DPAF pour l'autorisation
         ]);
-
+    
         return redirect()->route('srhds.assign')
-               ->with('success', 'Département assigné avec succès');
+               ->with('success', 'Département assigné avec succès. La demande a été renvoyée au DPAF pour autorisation.');
     }
 
     public function showRequest($id)

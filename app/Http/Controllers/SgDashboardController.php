@@ -11,12 +11,23 @@ class SgDashboardController extends Controller
     protected $statusColumn = 'status';
 
     // Statuts utilisés dans le système
-    protected $statusPending = 'en_attente_sg'; // Statut "en attente SG"
-    protected $statusTransferred = 'transferee_dpaf'; // Statut transféré à DPAF
+    protected $statusPending = 'en_attente_sg';
+    protected $statusTransferred = 'transferee_dpaf';
 
-    /**
-     * Affiche le tableau de bord principal
-     */
+    public function __construct()
+    {
+        $this->middleware('auth:sg');
+        
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+            
+            return $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
+                           ->header('Pragma', 'no-cache')
+                           ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+        });
+    }
+
+
     public function index()
     {
         return view('sg.dashboard', [
