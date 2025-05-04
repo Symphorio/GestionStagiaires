@@ -142,3 +142,37 @@
         animation: scaleIn 0.3s ease-out forwards;
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emailField = document.getElementById('email');
+    const codeField = document.getElementById('intern_id');
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Vérification côté client pour améliorer l'UX
+        const response = await fetch('/api/verify-stagiaire-code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                email: emailField.value,
+                code: codeField.value
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.valid) {
+            alert('Combinaison email/code invalide. Utilisez les informations reçues par email.');
+            return;
+        }
+
+        form.submit();
+    });
+});
+</script>
