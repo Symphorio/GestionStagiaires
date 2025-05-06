@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\SgLoginController;
 use App\Http\Controllers\Auth\SgRegisterController;
 use App\Http\Controllers\Auth\SrhdsLoginController;
 use App\Http\Controllers\Auth\SrhdsRegisterController;
+use App\Http\Controllers\Auth\SuperviseurAuthController;
 
 // Dashboard Controllers
 use App\Http\Controllers\SgDashboardController;
@@ -73,6 +74,13 @@ Route::middleware('guest')->group(function () {
         Route::get('/register', [SrhdsRegisterController::class, 'showRegistrationForm'])->name('srhds.register');
         Route::post('/register', [SrhdsRegisterController::class, 'register'])->name('srhds.register.submit');
     });
+
+    // Supervisur
+    Route::prefix('superviseur')->group(function () {
+        Route::get('/auth', [SuperviseurAuthController::class, 'index'])->name('superviseur.auth');
+        Route::post('/login', [SuperviseurAuthController::class, 'login'])->name('superviseur.login.submit');
+        Route::post('/register', [SuperviseurAuthController::class, 'register'])->name('superviseur.register.submit');
+    });   
 });
 
 /*
@@ -81,7 +89,7 @@ Route::middleware('guest')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::post('/logout', [LoginController::class, 'logout'])
-    ->middleware(['auth:stagiaire,sg,dpaf,srhds'])
+    ->middleware(['auth:stagiaire,sg,dpaf,srhds,suprviseur'])
     ->name('logout');
 
 /*
@@ -151,6 +159,10 @@ Route::prefix('srhds')->name('srhds.')->middleware('auth:srhds')->group(function
     Route::delete('/assign/{id}', [SrhdsDashboardController::class, 'deleteRequest'])->name('assign.delete');
     Route::post('/logout', [SrhdsLoginController::class, 'logout'])->name('logout');
 });
+
+
+
+
 
 /*
 |--------------------------------------------------------------------------

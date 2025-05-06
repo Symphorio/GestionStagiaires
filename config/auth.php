@@ -31,6 +31,11 @@ return [
         'driver' => 'session',
         'provider' => 'dpafs',
     ],
+
+    'superviseur' => [
+        'driver' => 'session',
+        'provider' => 'superviseurs',
+    ],
 ],
 
 'providers' => [
@@ -57,6 +62,11 @@ return [
     'dpafs' => [
         'driver' => 'eloquent',
         'model' => App\Models\Dpaf::class,
+    ],
+
+    'superviseurs' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Superviseur::class,
     ],
 ],
 
