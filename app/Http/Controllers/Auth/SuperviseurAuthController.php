@@ -26,7 +26,7 @@ public function index(Request $request)
     Auth::guard('sg')->logout();
     
     $isLogin = $request->has('isLogin') ? (bool)$request->query('isLogin') : true;
-    return view('auth.superviseur-login', ['isLogin' => $isLogin]);
+    return view('superviseur.index', ['isLogin' => $isLogin]);
 }
 
     public function login(Request $request)
