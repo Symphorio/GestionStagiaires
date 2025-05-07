@@ -13,7 +13,12 @@ class Tache extends Model
         'status',
         'deadline',
         'stagiaire_id',
-        'assigned_by'
+        'assigned_by',
+        'statut'
+    ];
+
+    protected $casts = [
+        'statut' => 'string'
     ];
 
     public function stagiaire()

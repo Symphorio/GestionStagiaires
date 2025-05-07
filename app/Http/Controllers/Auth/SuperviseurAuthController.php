@@ -10,11 +10,24 @@ use Illuminate\Support\Facades\Hash;
 
 class SuperviseurAuthController extends Controller
 {
-    public function index(Request $request)
-    {
-        $isLogin = $request->has('isLogin') ? (bool)$request->query('isLogin') : true;
-        return view('superviseur.index', ['isLogin' => $isLogin]);
-    }
+
+    public function __construct()
+{
+    $this->middleware('guest:superviseur')->except('logout');
+}
+
+
+public function index(Request $request)
+{
+    // Force la déconnexion des autres guards
+    Auth::guard('stagiaire')->logout();
+    Auth::guard('dpaf')->logout();
+    Auth::guard('srhds')->logout();
+    Auth::guard('sg')->logout();
+    
+    $isLogin = $request->has('isLogin') ? (bool)$request->query('isLogin') : true;
+    return view('auth.superviseur-login', ['isLogin' => $isLogin]);
+}
 
     public function login(Request $request)
     {
@@ -56,5 +69,19 @@ class SuperviseurAuthController extends Controller
         Auth::guard('superviseur')->login($superviseur);
 
         return redirect('/superviseur/dashboard');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::guard('superviseur')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    
+        return redirect('/');
+    }
+
+    public function redirectTo()
+    {
+        return route('superviseur.dashboard');
     }
 }

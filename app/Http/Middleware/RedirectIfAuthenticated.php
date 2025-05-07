@@ -37,6 +37,7 @@ protected function getHomeRouteForGuard($guard)
         'tuteur' => route('tuteur.dashboard'),
         'sg' => route('sg.dashboard'),
         'srhds' => route('srhds.dashboard'), // Ajoutez cette ligne
+        'superviseur' => route('superviseur.dashboard'), // Ajoutez cette ligne
         default => RouteServiceProvider::HOME
     };
 }

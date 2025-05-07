@@ -19,6 +19,8 @@ use App\Http\Controllers\Auth\SuperviseurAuthController;
 use App\Http\Controllers\SgDashboardController;
 use App\Http\Controllers\DpafDashboardController;
 use App\Http\Controllers\SrhdsDashboardController;
+use App\Http\Controllers\SuperviseurDashboardController; // Ajout de l'import manquant
+
 
 /*
 |--------------------------------------------------------------------------
@@ -89,7 +91,7 @@ Route::middleware('guest')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::post('/logout', [LoginController::class, 'logout'])
-    ->middleware(['auth:stagiaire,sg,dpaf,srhds,suprviseur'])
+    ->middleware(['auth:stagiaire,sg,dpaf,srhds,superviseur'])
     ->name('logout');
 
 /*
@@ -160,8 +162,16 @@ Route::prefix('srhds')->name('srhds.')->middleware('auth:srhds')->group(function
     Route::post('/logout', [SrhdsLoginController::class, 'logout'])->name('logout');
 });
 
-
-
+/*
+|--------------------------------------------------------------------------
+| Espace Superviseur (auth:superviseur)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('superviseur')->name('superviseur.')->middleware('auth:superviseur')->group(function () {
+    Route::get('/dashboard', [SuperviseurDashboardController::class, 'index'])->name('dashboard');
+    Route::post('/logout', [SuperviseurAuthController::class, 'logout'])->name('logout');
+    
+});    
 
 
 /*

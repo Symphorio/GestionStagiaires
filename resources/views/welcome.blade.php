@@ -144,8 +144,9 @@
                 Accès SRHDS
             </a>
 
-            <a href="{{ route('superviseur.auth') }}" class="bg-supervisor text-black px-4 py-2 rounded-md hover:bg-supervisor-light">
-               Espace Superviseur
+            <a href="{{ route('superviseur.auth') }}" 
+                class="hover-scale px-6 py-3 rounded-lg font-medium bg-purple-600 text-white hover:bg-purple-700 transition-all">
+                Espace Superviseur
             </a>
 
         </div>

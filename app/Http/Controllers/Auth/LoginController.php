@@ -19,6 +19,7 @@ class LoginController extends Controller
         Auth::guard('sg')->logout();
         Auth::guard('dpaf')->logout();
         Auth::guard('srhds')->logout();
+        Auth::guard('superviseur')->logout();
         
         return view('auth.login');
     }

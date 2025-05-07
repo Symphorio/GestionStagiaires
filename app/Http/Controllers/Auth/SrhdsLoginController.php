@@ -19,6 +19,7 @@ class SrhdsLoginController extends Controller
         Auth::guard('stagiaire')->logout();
         Auth::guard('dpaf')->logout();
         Auth::guard('sg')->logout();
+        Auth::guard('superviseur')->logout();
         
         return view('auth.srhds_login');
     }

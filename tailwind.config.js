@@ -17,9 +17,12 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                'supervisor': '#3b82f6', // bleu par défaut
+                'supervisor-muted': '#bfdbfe', // bleu clair
+            },
         },
     },
 
     plugins: [forms, typography],
 };
-

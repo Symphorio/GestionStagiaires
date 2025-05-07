@@ -22,6 +22,7 @@ class DpafLoginController extends Controller
         Auth::guard('stagiaire')->logout();
         Auth::guard('sg')->logout();
         Auth::guard('srhds')->logout();
+        Auth::guard('superviseur')->logout();
         
         return view('auth.dpaf_login');
     }

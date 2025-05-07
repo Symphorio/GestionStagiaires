@@ -21,6 +21,7 @@ class RouteServiceProvider extends ServiceProvider
     public const DPAF_HOME = '/dpaf/dashboard';
     public const SG_HOME = '/sg/dashboard';
     public const SRHDS_HOME = '/srhds/dashboard';
+    public const SUPERVISEUR_HOME = '/superviseur/dashboard';
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.

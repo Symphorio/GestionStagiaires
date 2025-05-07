@@ -12,7 +12,12 @@ class Rapport extends Model
         'file_path',
         'original_name',
         'comments',
-        'submitted_at'
+        'submitted_at',
+        'statut'
+    ];
+
+    protected $casts = [
+        'statut' => 'string'
     ];
 
     public function stagiaire()

@@ -19,6 +19,7 @@ class SgLoginController extends Controller
         Auth::guard('stagiaire')->logout();
         Auth::guard('dpaf')->logout();
         Auth::guard('srhds')->logout();
+        Auth::guard('superviseur')->logout();
         
         return view('auth.sg_login');
     }

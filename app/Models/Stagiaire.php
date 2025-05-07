@@ -21,7 +21,8 @@ class Stagiaire extends Authenticatable
         'intern_id', 
         'password', 
         'is_validated',
-        'role_id'
+        'role_id',
+        'superviseur_id'
     ];
 
     protected $hidden = [
@@ -62,5 +63,21 @@ public function demandeStage()
 public function parametres()
 {
     return $this->hasOne(Parametre::class);
+}
+
+public function superviseur()
+{
+    return $this->belongsTo(Superviseur::class);
+}
+
+public function taches()
+{
+    return $this->hasMany(Tache::class);
+}
+
+// Tache.php
+public function stagiaire()
+{
+    return $this->belongsTo(Stagiaire::class);
 }
 }
