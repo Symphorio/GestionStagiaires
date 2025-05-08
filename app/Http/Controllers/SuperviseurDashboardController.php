@@ -20,7 +20,7 @@ class SuperviseurDashboardController extends Controller
             'stagiaires_count' => Stagiaire::where('superviseur_id', $superviseurId)->count(),
             'taches_count' => Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
                 $query->where('superviseur_id', $superviseurId);
-            })->where('statut', '!=', 'terminé')->count(),
+            })->where('status', '!=', 'terminé')->count(),
             'rapports_pending_count' => Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
                 $query->where('superviseur_id', $superviseurId);
             })->where('statut', 'en attente')->count(),
@@ -213,5 +213,145 @@ class SuperviseurDashboardController extends Controller
 
         return redirect()->route('superviseur.stagiaires')
             ->with('success', 'Stagiaire supprimé avec succès');
+    }
+
+        /**
+     * Affiche la liste des tâches
+     */
+    public function tasks()
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        $tasks = Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
+                $query->where('superviseur_id', $superviseurId);
+            })
+            ->with('stagiaire')
+            ->latest()
+            ->get()
+            ->map(function($task) {
+                $task->formatted_due_date = Carbon::parse($task->date_echeance)->format('d/m/Y');
+                $task->status_label = $this->getStatusLabel($task->statut);
+                $task->status_class = $this->getStatusBadgeClass($task->statut);
+                return $task;
+            });
+    
+        $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+            ->where('statut', 'actif')
+            ->get(['id', 'prenom', 'nom']);
+    
+        return view('superviseur.tasks', [
+            'tasks' => $tasks,
+            'stagiaires' => $stagiaires,
+            'allStagiairesSelected' => false // Nouvelle variable pour gérer la sélection globale
+        ]);
+    }
+
+    /**
+     * Stocke une nouvelle tâche
+     */
+    public function storeTask(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'stagiaires' => 'required_without:all_stagiaires|array',
+            'stagiaires.*' => 'exists:stagiaires,id',
+            'all_stagiaires' => 'sometimes|boolean',
+            'deadline' => 'required|date',
+        ]);
+    
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        // Vérifiez si des stagiaires sont sélectionnés
+        if ($request->all_stagiaires) {
+            $stagiairesIds = Stagiaire::where('superviseur_id', $superviseurId)
+                ->pluck('id')
+                ->toArray();
+        } else {
+            $stagiairesIds = $request->stagiaires ?? [];
+        }
+    
+        // Vérifiez qu'il y a bien des stagiaires sélectionnés
+        if (empty($stagiairesIds)) {
+            return back()->with('error', 'Aucun stagiaire sélectionné');
+        }
+    
+        foreach ($stagiairesIds as $stagiaireId) {
+            Tache::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'status' => 'pending',
+                'deadline' => $request->deadline,
+                'stagiaire_id' => $stagiaireId,
+                'assigned_by' => $superviseurId,
+            ]);
+        }
+    
+        return redirect()->route('superviseur.tasks')
+            ->with('success', 'Tâche(s) créée(s) avec succès');
+    }
+
+    /**
+     * Met à jour le statut d'une tâche
+     */
+    public function updateTaskStatus(Request $request, Tache $task)
+    {
+        $request->validate([
+            'statut' => 'required|in:en attente,en cours,terminé'
+        ]);
+
+        $task->update(['statut' => $request->statut]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Statut mis à jour',
+            'status_label' => $this->getStatusLabel($task->statut),
+            'status_class' => $this->getStatusBadgeClass($task->statut)
+        ]);
+    }
+
+    /**
+     * Supprime une tâche
+     */
+    public function destroyTask(Tache $task)
+    {
+        $task->delete();
+
+        return redirect()->route('superviseur.tasks')
+            ->with('success', 'Tâche supprimée avec succès');
+    }
+
+    /**
+     * Retourne la classe CSS pour le badge de statut
+     */
+    private function getStatusBadgeClass($status)
+    {
+        switch ($status) {
+            case 'en attente':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'en cours':
+                return 'bg-blue-100 text-blue-800';
+            case 'terminé':
+                return 'bg-green-100 text-green-800';
+            default:
+                return 'bg-gray-100';
+        }
+    }
+
+    /**
+     * Retourne le libellé du statut
+     */
+    private function getStatusLabel($status)
+    {
+        switch ($status) {
+            case 'en attente':
+                return 'En attente';
+            case 'en cours':
+                return 'En cours';
+            case 'terminé':
+                return 'Terminé';
+            default:
+                return $status;
+        }
     }
 }

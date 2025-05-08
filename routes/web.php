@@ -102,7 +102,7 @@ Route::post('/logout', [LoginController::class, 'logout'])
 Route::prefix('stagiaire')->name('stagiaire.')->middleware('auth:stagiaire')->group(function () {
     Route::get('/dashboard', [TableauDeBordStagiaireController::class, 'dashboard'])->name('dashboard');
     Route::get('/taches', [TableauDeBordStagiaireController::class, 'taches'])->name('taches');
-    Route::patch('/taches/{task}/status', [TableauDeBordStagiaireController::class, 'updateTaskStatus'])->name('taches.update-status');
+    Route::patch('/taches/{tache}/status', [TableauDeBordStagiaireController::class, 'updateTaskStatus'])->name('taches.update-status');
     Route::get('/rapports', [TableauDeBordStagiaireController::class, 'rapports'])->name('rapports');
     Route::post('/rapports/upload', [TableauDeBordStagiaireController::class, 'uploadRapport'])->name('rapports.upload');
     Route::get('/soumission-memoire', [TableauDeBordStagiaireController::class, 'afficherSoumissionMemoire'])->name('soumission-memoire');
@@ -172,14 +172,14 @@ Route::prefix('superviseur')->name('superviseur.')->middleware('auth:superviseur
     Route::get('/stagiaires', [SuperviseurDashboardController::class, 'stagiaires'])->name('stagiaires');
     Route::post('/superviseur/stagiaires/{stagiaire}/associate', [SuperviseurDashboardController::class, 'associate'])->name('stagiaires.associate');  
     Route::post('/superviseur/stagiaires/{stagiaire}/dissociate', [SuperviseurDashboardController::class, 'dissociate'])->name('stagiaires.dissociate');
-    Route::post('/superviseur/stagiaires', [SuperviseurDashboardController::class, 'store'])
-    ->name('stagiaires.store');
-    Route::get('/superviseur/stagiaires/search', [SuperviseurDashboardController::class, 'search'])
-    ->name('stagiaires.search');
-
+    Route::post('/superviseur/stagiaires', [SuperviseurDashboardController::class, 'store'])->name('stagiaires.store');
+    Route::get('/superviseur/stagiaires/search', [SuperviseurDashboardController::class, 'search'])->name('stagiaires.search');
     Route::get('/superviseur/stagiaires/{id}/details', [SuperviseurDashboardController::class, 'showDetails'])->name('stagiaires.details');
-    Route::delete('/stagiaires/{stagiaire}', [SuperviseurDashboardController::class, 'destroy'])
-    ->name('stagiaires.destroy');
+    Route::delete('/stagiaires/{stagiaire}', [SuperviseurDashboardController::class, 'destroy'])->name('stagiaires.destroy');
+    Route::get('/tasks', [SuperviseurDashboardController::class, 'tasks'])->name('tasks');
+    Route::post('/tasks', [SuperviseurDashboardController::class, 'storeTask'])->name('tasks.store');
+    Route::patch('/tasks/{task}/status', [SuperviseurDashboardController::class, 'updateTaskStatus'])->name('tasks.update-status');
+    Route::delete('/tasks/{task}', [SuperviseurDashboardController::class, 'destroyTask'])->name('tasks.destroy');
     Route::post('/logout', [SuperviseurAuthController::class, 'logout'])->name('logout');
 });    
 

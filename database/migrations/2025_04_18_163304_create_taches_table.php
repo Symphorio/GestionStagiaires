@@ -15,10 +15,10 @@ return new class extends Migration
         $table->id();
         $table->string('title');
         $table->text('description')->nullable();
-        $table->enum('status', ['pending', 'completed'])->default('pending');
+        $table->enum('status', ['pending', 'in_progress', 'completed'])->default('pending');
         $table->dateTime('deadline');
         $table->foreignId('stagiaire_id')->constrained('stagiaires')->onDelete('cascade');
-        $table->string('assigned_by');
+        $table->foreignId('assigned_by')->constrained('superviseurs')->onDelete('cascade');
         $table->timestamps();
     });
 }

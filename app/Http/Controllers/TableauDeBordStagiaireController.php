@@ -85,27 +85,34 @@ class TableauDeBordStagiaireController extends Controller
     public function taches()
     {
         $stagiaireId = auth('stagiaire')->id();
-        $taches = Tache::where('stagiaire_id', $stagiaireId)
-                     ->orderBy('created_at', 'desc')
-                     ->get();
-
+        
+        $taches = Tache::with('assignedBy')
+            ->where('stagiaire_id', $stagiaireId)
+            ->orderBy('deadline', 'asc')
+            ->get()
+            ->map(function($tache) {
+                // Marquer les tâches en retard
+                if ($tache->status !== 'completed' && $tache->deadline < now()) {
+                    $tache->status = 'late';
+                }
+                return $tache;
+            });
+    
         return view('stagiaire.taches', compact('taches'));
     }
-
-    /**
-     * Met à jour le statut d'une tâche
-     */
-    public function updateTaskStatus(Request $request, $taskId)
+    
+    public function updateTaskStatus(Request $request, Tache $tache)
     {
-        $task = Tache::findOrFail($taskId);
-        
+        if ($tache->stagiaire_id !== auth('stagiaire')->id()) {
+            abort(403);
+        }
+    
         $request->validate([
-            'status' => 'required|in:pending,completed'
+            'status' => 'required|in:pending,in_progress,completed'
         ]);
-
-        $task->status = $request->input('status');
-        $task->save();
-        
+    
+        $tache->update(['status' => $request->status]);
+    
         return back()->with('success', 'Statut de la tâche mis à jour');
     }
 
