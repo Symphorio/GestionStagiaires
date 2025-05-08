@@ -169,8 +169,14 @@ Route::prefix('srhds')->name('srhds.')->middleware('auth:srhds')->group(function
 */
 Route::prefix('superviseur')->name('superviseur.')->middleware('auth:superviseur')->group(function () {
     Route::get('/dashboard', [SuperviseurDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/stagiaires', [SuperviseurDashboardController::class, 'stagiaires'])->name('stagiaires');
+    Route::post('/superviseur/stagiaires/{stagiaire}/associate', [SuperviseurDashboardController::class, 'associate'])->name('stagiaires.associate');  
+    Route::post('/superviseur/stagiaires/{stagiaire}/dissociate', [SuperviseurDashboardController::class, 'dissociate'])->name('stagiaires.dissociate');
+    Route::post('/superviseur/stagiaires', [SuperviseurDashboardController::class, 'store'])
+    ->name('stagiaires.store');
+    Route::delete('/stagiaires/{stagiaire}', [SuperviseurDashboardController::class, 'destroy'])
+    ->name('stagiaires.destroy');
     Route::post('/logout', [SuperviseurAuthController::class, 'logout'])->name('logout');
-    
 });    
 
 

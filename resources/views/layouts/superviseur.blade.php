@@ -20,6 +20,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-100">
@@ -37,7 +39,7 @@
                             <span class="mr-3">📊</span>
                             Tableau de bord
                         </a>
-                        <a href="#" 
+                        <a href="{{ route('superviseur.stagiaires') }}" 
                            class="flex items-center px-4 py-2 text-sm font-medium text-blue-200 hover:text-white hover:bg-blue-700 rounded-md group">
                             <span class="mr-3">👥</span>
                             Stagiaires

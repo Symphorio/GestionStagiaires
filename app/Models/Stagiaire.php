@@ -12,17 +12,23 @@ class Stagiaire extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $guard = 'stagiaire';
-    protected $table = 'stagiaires'; // Important!
+    protected $table = 'stagiaires';
 
     protected $fillable = [
         'nom', 
         'prenom', 
-        'email', 
+        'email',
+        'telephone',
         'intern_id', 
         'password', 
         'is_validated',
         'role_id',
-        'superviseur_id'
+        'superviseur_id',
+        'niveau_etudes',
+        'specialisation',
+        'date_debut',
+        'date_fin',
+        'statut'
     ];
 
     protected $hidden = [
@@ -32,13 +38,69 @@ class Stagiaire extends Authenticatable
 
     protected $casts = [
         'is_validated' => 'boolean',
+        'date_debut' => 'date',
+        'date_fin' => 'date',
     ];
 
+    // Relations
     public function role()
     {
         return $this->belongsTo(Role::class);
     }
 
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    public function demandeStage()
+    {
+        return $this->hasOne(DemandeStage::class);
+    }
+
+    public function parametres()
+    {
+        return $this->hasOne(Parametre::class);
+    }
+
+    public function superviseur()
+    {
+        return $this->belongsTo(Superviseur::class);
+    }
+
+    public function taches()
+    {
+        return $this->hasMany(Tache::class);
+    }
+
+    // Scopes
+    public function scopeActifs($query)
+    {
+        return $query->where('statut', 'actif');
+    }
+
+    public function scopeInactifs($query)
+    {
+        return $query->where('statut', 'inactif');
+    }
+
+    public function scopeTermines($query)
+    {
+        return $query->where('statut', 'termine');
+    }
+
+    // Accesseurs
+    public function getNomCompletAttribute()
+    {
+        return $this->prenom . ' ' . $this->nom;
+    }
+
+    public function getInitialsAttribute()
+    {
+        return strtoupper(substr($this->prenom, 0, 1) . substr($this->nom, 0, 1));
+    }
+
+    // Méthodes
     public function hasRole($roleName)
     {
         return $this->role && $this->role->nom === $roleName;
@@ -49,35 +111,9 @@ class Stagiaire extends Authenticatable
         return 'STG-' . strtoupper(Str::random(8));
     }
 
-    // Ajoutez cette relation
-public function profile()
-{
-    return $this->hasOne(Profile::class);
-}
-
-public function demandeStage()
-{
-    return $this->hasOne(DemandeStage::class); // Adaptez selon votre relation réelle
-}
-
-public function parametres()
-{
-    return $this->hasOne(Parametre::class);
-}
-
-public function superviseur()
-{
-    return $this->belongsTo(Superviseur::class);
-}
-
-public function taches()
-{
-    return $this->hasMany(Tache::class);
-}
-
-// Tache.php
-public function stagiaire()
-{
-    return $this->belongsTo(Stagiaire::class);
-}
+    public function estEnCours()
+    {
+        return $this->statut === 'actif' && 
+               now()->between($this->date_debut, $this->date_fin);
+    }
 }
