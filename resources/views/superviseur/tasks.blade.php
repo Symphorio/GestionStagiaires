@@ -40,79 +40,78 @@
                         ></textarea>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                    <x-label for="stagiaires-select">Stagiaire(s) assigné(s)</x-label>
-                    
-                    <div class="relative">
-                        <!-- Bouton déclencheur -->
-                        <button
-                            type="button"
-                            id="stagiaires-trigger"
-                            class="w-full flex justify-between items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-left shadow-sm focus:border-supervisor focus:outline-none focus:ring-1 focus:ring-supervisor sm:text-sm"
-                            onclick="toggleStagiairesList()"
-                        >
-                            <span id="selected-stagiaires-text">
-                                @if(old('all_stagiaires', false))
-                                    Tous les stagiaires
-                                @elseif(count(old('stagiaires', [])) > 0)
-                                    {{ count(old('stagiaires', [])) }} stagiaire(s) sélectionné(s)
-                                @else
-                                    Sélectionner un ou plusieurs stagiaires
-                                @endif
-                            </span>
-                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        
-                        <!-- Liste déroulante (cachée par défaut) -->
-                        <div 
-                            id="stagiaires-list"
-                            class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm hidden"
-                            style="max-height: 16rem;"
-                        >
-                            <!-- Option "Tous les stagiaires" -->
-                            <div class="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    id="select-all-stagiaires"
-                                    name="all_stagiaires"
-                                    value="1"
-                                    class="h-4 w-4 rounded border-gray-300 text-supervisor focus:ring-supervisor"
-                                    @if(old('all_stagiaires', false)) checked @endif
-                                    onclick="toggleAllStagiaires(this)"
+                        <div class="space-y-2">
+                            <x-label for="stagiaires-select">Stagiaire(s) assigné(s)</x-label>
+                            <div class="relative">
+                                <!-- Bouton déclencheur -->
+                                <button
+                                    type="button"
+                                    id="stagiaires-trigger"
+                                    class="w-full flex justify-between items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-left shadow-sm focus:border-supervisor focus:outline-none focus:ring-1 focus:ring-supervisor sm:text-sm"
+                                    onclick="toggleStagiairesList()"
                                 >
-                                <label for="select-all-stagiaires" class="ml-2 text-gray-700">
-                                    Tous les stagiaires
-                                </label>
-                            </div>
-                            
-                            <div class="border-t border-gray-200 my-1"></div>
-                            
-                            <!-- Liste des stagiaires individuels -->
-                            <div id="stagiaires-options" class="overflow-y-auto" style="max-height: 12rem;">
-                                @foreach($stagiaires as $stagiaire)
+                                    <span id="selected-stagiaires-text">
+                                        @if(old('all_stagiaires', false))
+                                            Tous les stagiaires
+                                        @elseif(count(old('stagiaires', [])) > 0)
+                                            {{ count(old('stagiaires', [])) }} stagiaire(s) sélectionné(s)
+                                        @else
+                                            Sélectionner un ou plusieurs stagiaires
+                                        @endif
+                                    </span>
+                                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                
+                                <!-- Liste déroulante -->
+                                <div 
+                                    id="stagiaires-list"
+                                    class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm hidden"
+                                    style="max-height: 16rem;"
+                                >
+                                    <!-- Option "Tous les stagiaires" -->
                                     <div class="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer">
                                         <input 
                                             type="checkbox" 
-                                            id="stagiaire-{{ $stagiaire->id }}"
-                                            name="stagiaires[]"
-                                            value="{{ $stagiaire->id }}"
-                                            class="h-4 w-4 rounded border-gray-300 text-supervisor focus:ring-supervisor individual-checkbox"
-                                            @if(in_array($stagiaire->id, old('stagiaires', []))) checked @endif
-                                            onclick="updateSelection()"
+                                            id="select-all-stagiaires"
+                                            name="all_stagiaires"
+                                            value="1"
+                                            class="h-4 w-4 rounded border-gray-300 text-supervisor focus:ring-supervisor"
+                                            @if(old('all_stagiaires', false)) checked @endif
+                                            onclick="toggleAllStagiaires(this)"
                                         >
-                                        <label for="stagiaire-{{ $stagiaire->id }}" class="ml-2 text-gray-700">
-                                            {{ $stagiaire->prenom }} {{ $stagiaire->nom }}
+                                        <label for="select-all-stagiaires" class="ml-2 text-gray-700">
+                                            Tous les stagiaires
                                         </label>
                                     </div>
-                                @endforeach
+                                    
+                                    <div class="border-t border-gray-200 my-1"></div>
+                                    
+                                    <!-- Liste des stagiaires individuels -->
+                                    <div id="stagiaires-options" class="overflow-y-auto" style="max-height: 12rem;">
+                                        @foreach($stagiaires as $stagiaire)
+                                            <div class="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="stagiaire-{{ $stagiaire->id }}"
+                                                    name="stagiaires[]"
+                                                    value="{{ $stagiaire->id }}"
+                                                    class="h-4 w-4 rounded border-gray-300 text-supervisor focus:ring-supervisor individual-checkbox"
+                                                    @if(in_array($stagiaire->id, old('stagiaires', []))) checked @endif
+                                                    onclick="updateSelection()"
+                                                >
+                                                <label for="stagiaire-{{ $stagiaire->id }}" class="ml-2 text-gray-700">
+                                                    {{ $stagiaire->prenom }} {{ $stagiaire->nom }}
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
                         <div class="space-y-2">
-                            <x-label for="date_echeance">Date d'échéance</x-label>
+                            <x-label for="deadline">Date d'échéance</x-label>
                             <x-input 
                                 id="deadline" 
                                 name="deadline"
@@ -138,9 +137,9 @@
                 <x-card class="overflow-hidden">
                     <x-card-header class="pb-3">
                         <div class="flex justify-between items-start">
-                            <x-card-title class="text-lg">{{ $task->titre }}</x-card-title>
-                            <span class="px-2 py-1 rounded-full text-xs {{ $task->status_class }}">
-                                {{ $task->status_label }}
+                            <x-card-title class="text-lg">{{ $task->title }}</x-card-title>
+                            <span class="px-2 py-1 rounded-full text-xs {{ $task->status === 'completed' ? 'bg-green-100 text-green-800' : ($task->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                {{ $task->status_text }}
                             </span>
                         </div>
                         <x-card-description class="text-sm text-gray-500">
@@ -149,22 +148,30 @@
                     </x-card-header>
                     <x-card-content class="pb-4">
                         <p class="text-sm mb-2">{{ $task->description }}</p>
-                        <p class="text-xs text-gray-500">Échéance: {{ $task->formatted_due_date }}</p>
+                        <p class="text-xs text-gray-500">Échéance: {{ $task->deadline->format('d/m/Y') }}</p>
                     </x-card-content>
                     <x-card-footer class="border-t pt-3 flex justify-between">
-                        <form action="{{ route('superviseur.tasks.update-status', $task) }}" method="POST" class="inline">
-                            @csrf
-                            @method('PATCH')
-                            <select 
-                                name="statut"
-                                onchange="this.form.submit()"
-                                class="rounded-md border-gray-300 shadow-sm focus:border-supervisor focus:ring focus:ring-supervisor focus:ring-opacity-50 text-sm"
-                            >
-                                <option value="en attente" {{ $task->statut === 'en attente' ? 'selected' : '' }}>En attente</option>
-                                <option value="en cours" {{ $task->statut === 'en cours' ? 'selected' : '' }}>En cours</option>
-                                <option value="terminé" {{ $task->statut === 'terminé' ? 'selected' : '' }}>Terminé</option>
-                            </select>
-                        </form>
+                        <div class="flex space-x-2">
+                            <a href="{{ route('superviseur.tasks.edit', $task) }}" 
+                               class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded text-sm">
+                               Modifier
+                            </a>
+                            <form action="{{ route('superviseur.tasks.update-status', $task) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <select 
+                                    name="status"
+                                    onchange="this.form.submit()"
+                                    class="rounded-md border-gray-300 shadow-sm focus:border-supervisor focus:ring focus:ring-supervisor focus:ring-opacity-50 text-sm"
+                                >
+                                    @foreach(App\Models\Tache::STATUSES as $value => $label)
+                                        <option value="{{ $value }}" {{ $task->status === $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        </div>
                         <form action="{{ route('superviseur.tasks.destroy', $task) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
@@ -182,7 +189,6 @@
         </div>
     </div>
 </div>
-
 
 <script>
     // Basculer l'affichage de la liste des stagiaires

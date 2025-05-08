@@ -311,6 +311,60 @@ class SuperviseurDashboardController extends Controller
     }
 
     /**
+ * Affiche le formulaire de modification
+ */
+public function editTask(Tache $task)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    // Vérification que la tâche appartient bien à un stagiaire du superviseur
+    if ($task->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+        ->where('statut', 'actif')
+        ->get(['id', 'prenom', 'nom']);
+
+    return view('superviseur.edit-task', [
+        'task' => $task,
+        'stagiaires' => $stagiaires
+    ]);
+}
+
+/**
+ * Met à jour la tâche
+ */
+public function updateTask(Request $request, Tache $task)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    // Vérification d'accès
+    if ($task->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'stagiaire_id' => 'required|exists:stagiaires,id',
+        'deadline' => 'required|date',
+        'status' => 'required|in:pending,in_progress,completed'
+    ]);
+
+    $task->update([
+        'title' => $request->title,
+        'description' => $request->description,
+        'stagiaire_id' => $request->stagiaire_id,
+        'deadline' => $request->deadline,
+        'status' => $request->status
+    ]);
+
+    return redirect()->route('superviseur.tasks')
+        ->with('success', 'Tâche mise à jour avec succès');
+}
+
+    /**
      * Supprime une tâche
      */
     public function destroyTask(Tache $task)

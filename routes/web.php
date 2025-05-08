@@ -179,6 +179,8 @@ Route::prefix('superviseur')->name('superviseur.')->middleware('auth:superviseur
     Route::get('/tasks', [SuperviseurDashboardController::class, 'tasks'])->name('tasks');
     Route::post('/tasks', [SuperviseurDashboardController::class, 'storeTask'])->name('tasks.store');
     Route::patch('/tasks/{task}/status', [SuperviseurDashboardController::class, 'updateTaskStatus'])->name('tasks.update-status');
+    Route::get('/tasks/{task}/edit', [SuperviseurDashboardController::class, 'editTask'])->name('tasks.edit');
+    Route::put('/tasks/{task}', [SuperviseurDashboardController::class, 'updateTask'])->name('tasks.update');
     Route::delete('/tasks/{task}', [SuperviseurDashboardController::class, 'destroyTask'])->name('tasks.destroy');
     Route::post('/logout', [SuperviseurAuthController::class, 'logout'])->name('logout');
 });    
