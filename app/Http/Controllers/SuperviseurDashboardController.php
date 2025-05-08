@@ -60,7 +60,7 @@ class SuperviseurDashboardController extends Controller
         // Seulement les stagiaires avec demandeStage
         $activeStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
             ->where('statut', 'actif')
-            ->whereHas('demandeStage') // <-- Important
+            ->whereHas('demandeStage')
             ->with(['taches', 'demandeStage'])
             ->withCount([
                 'taches as taches_completees' => function($query) {
@@ -125,7 +125,45 @@ class SuperviseurDashboardController extends Controller
     public function showDetails($id)
     {
         $stagiaire = Stagiaire::with('demandeStage')->findOrFail($id);
-        return view('superviseur.stagiaire-details', compact('stagiaire'));
+        
+        // Initialisation des variables
+        $dateDebut = null;
+        $dateFin = null;
+        $dureeRestante = null;
+        $specialisation = null;
+        $progress = 0;
+
+        if ($stagiaire->demandeStage) {
+            $now = now();
+            $dateDebut = Carbon::parse($stagiaire->demandeStage->date_debut);
+            $dateFin = Carbon::parse($stagiaire->demandeStage->date_fin);
+            $specialisation = $stagiaire->demandeStage->specialisation;
+            
+            $totalDays = $dateDebut->diffInDays($dateFin);
+            $elapsedDays = $now->diffInDays($dateDebut);
+            $dureeRestante = $dateFin->diffInDays($now);
+            
+            $progress = $totalDays > 0 
+                ? min(round(($elapsedDays / $totalDays) * 100), 100)
+                : 0;
+        }
+    
+        // Retourne une vue partielle si c'est une requête AJAX
+        if (request()->ajax()) {
+            return view('partials.stagiaire-details', [
+                'stagiaire' => $stagiaire,
+                'progress' => $progress
+            ]);
+        }
+    
+        return view('superviseur.stagiaire-details', [
+            'stagiaire' => $stagiaire,
+            'progress' => $progress,
+            'dateDebut' => $dateDebut,
+            'dateFin' => $dateFin,
+            'dureeRestante' => $dureeRestante,
+            'formation' => $specialisation
+        ]);
     }
 
     public function store(Request $request)

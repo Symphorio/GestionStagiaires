@@ -29,7 +29,7 @@
                     <p><span class="font-medium">Nom:</span> {{ $stagiaire->nom }}</p>
                     <p><span class="font-medium">Prénom:</span> {{ $stagiaire->prenom }}</p>
                     <p><span class="font-medium">Email:</span> {{ $stagiaire->email }}</p>
-                    <p><span class="font-medium">Département:</span> {{ $stagiaire->demandeStage->formation ?? 'Non spécifié' }}</p>
+                    <p><span class="font-medium">Département:</span> {{ $stagiaire->demandeStage->specialisation ?? 'Non spécifié' }}</p>
                 </div>
             </div>
         </div>
@@ -49,12 +49,12 @@
     </div>
 
     <div class="mt-8">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Progression du stage</h2>
-        <div class="w-full bg-gray-200 rounded-full h-4">
-            <div class="bg-supervisor h-4 rounded-full" 
-                 style="width: {{ $progress }}%"></div>
-        </div>
-        <p class="mt-2 text-right">{{ number_format($progress, 2) }}% complété</p>
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Progression du stage</h2>
+    <div class="w-full bg-gray-200 rounded-full h-4">
+        <div class="bg-supervisor h-4 rounded-full"
+             style="width: {{ $progress }}%"></div>
     </div>
+    <p class="mt-2 text-right">{{ number_format($progress, 2) }}% complété</p>
+</div>
 </div>
 @endsection

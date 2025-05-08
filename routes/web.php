@@ -177,8 +177,7 @@ Route::prefix('superviseur')->name('superviseur.')->middleware('auth:superviseur
     Route::get('/superviseur/stagiaires/search', [SuperviseurDashboardController::class, 'search'])
     ->name('stagiaires.search');
 
-Route::get('/superviseur/stagiaires/{id}/details', [SuperviseurDashboardController::class, 'showDetails'])
-    ->name('stagiaires.details');
+    Route::get('/superviseur/stagiaires/{id}/details', [SuperviseurDashboardController::class, 'showDetails'])->name('stagiaires.details');
     Route::delete('/stagiaires/{stagiaire}', [SuperviseurDashboardController::class, 'destroy'])
     ->name('stagiaires.destroy');
     Route::post('/logout', [SuperviseurAuthController::class, 'logout'])->name('logout');

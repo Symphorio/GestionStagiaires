@@ -218,3 +218,20 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+#details-modal {
+  transition: opacity 0.3s ease;
+}
+
+#details-modal .modal-container {
+  transition: transform 0.3s ease;
+  transform: translateY(-20px);
+}
+
+#details-modal.show {
+  opacity: 1;
+}
+
+#details-modal.show .modal-container {
+  transform: translateY(0);
+}
