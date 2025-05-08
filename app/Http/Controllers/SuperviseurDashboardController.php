@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon; 
 use App\Models\Stagiaire;
 use App\Models\Tache;
 use App\Models\Rapport;
@@ -56,9 +57,10 @@ class SuperviseurDashboardController extends Controller
     {
         $superviseurId = auth()->guard('superviseur')->id();
         
-        // Stagiaires actifs
+        // Seulement les stagiaires avec demandeStage
         $activeStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
             ->where('statut', 'actif')
+            ->whereHas('demandeStage') // <-- Important
             ->with(['taches', 'demandeStage'])
             ->withCount([
                 'taches as taches_completees' => function($query) {
@@ -68,9 +70,17 @@ class SuperviseurDashboardController extends Controller
             ])
             ->get()
             ->map(function($stagiaire) {
-                $stagiaire->progress = $stagiaire->taches_total > 0 
-                    ? round(($stagiaire->taches_completees / $stagiaire->taches_total) * 100, 2)
+                $now = now();
+                $start = Carbon::parse($stagiaire->demandeStage->date_debut);
+                $end = Carbon::parse($stagiaire->demandeStage->date_fin);
+                
+                $totalDays = $start->diffInDays($end);
+                $elapsedDays = $now->diffInDays($start);
+                
+                $stagiaire->progress = $totalDays > 0 
+                    ? min(round(($elapsedDays / $totalDays) * 100), 100)
                     : 0;
+                    
                 return $stagiaire;
             });
 
@@ -78,30 +88,44 @@ class SuperviseurDashboardController extends Controller
         $completedStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
             ->where('statut', 'terminé')
             ->with(['taches', 'demandeStage'])
-            ->withCount([
-                'taches as taches_completees' => function($query) {
-                    $query->where('statut', 'terminé');
-                },
-                'taches as taches_total'
-            ])
             ->get()
             ->map(function($stagiaire) {
-                $stagiaire->progress = $stagiaire->taches_total > 0 
-                    ? round(($stagiaire->taches_completees / $stagiaire->taches_total) * 100, 2)
-                    : 100;
+                $stagiaire->progress = 100;
                 return $stagiaire;
             });
-
+    
         // Stagiaires disponibles
         $availableStagiaires = Stagiaire::whereNull('superviseur_id')
             ->where('is_validated', true)
             ->get();
-
+    
         return view('superviseur.stagiaire', [
             'activeStagiaires' => $activeStagiaires,
             'completedStagiaires' => $completedStagiaires,
             'availableStagiaires' => $availableStagiaires
         ]);
+    }
+    
+    public function search(Request $request)
+    {
+        $term = $request->input('q');
+        
+        $stagiaires = Stagiaire::where(function($query) use ($term) {
+                $query->where('prenom', 'like', "%$term%")
+                      ->orWhere('nom', 'like', "%$term%")
+                      ->orWhere('email', 'like', "%$term%");
+            })
+            ->whereNull('superviseur_id')
+            ->where('is_validated', true)
+            ->get(['id', 'prenom', 'nom', 'email']);
+    
+        return response()->json($stagiaires);
+    }
+    
+    public function showDetails($id)
+    {
+        $stagiaire = Stagiaire::with('demandeStage')->findOrFail($id);
+        return view('superviseur.stagiaire-details', compact('stagiaire'));
     }
 
     public function store(Request $request)

@@ -55,7 +55,10 @@ class Stagiaire extends Authenticatable
 
     public function demandeStage()
     {
-        return $this->hasOne(DemandeStage::class);
+        return $this->belongsTo(DemandeStage::class, 'id')->withDefault([
+            'date_debut' => now(),
+            'date_fin' => now()->addMonths(3)
+        ]);
     }
 
     public function parametres()

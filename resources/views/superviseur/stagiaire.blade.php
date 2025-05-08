@@ -9,36 +9,50 @@
         </p>
     </div>
 
-    <!-- Formulaire d'ajout -->
+    <!-- Formulaire d'ajout avec recherche -->
     <x-card>
-        <x-card-header>
-            <x-card-title>Associer un stagiaire existant</x-card-title>
-            <x-card-description>
-                Sélectionnez un stagiaire à ajouter à votre supervision
-            </x-card-description>
-        </x-card-header>
-        <x-card-content class="space-y-4">
-            <form action="{{ route('superviseur.stagiaires.store') }}" method="POST">
-                @csrf
-                <div class="space-y-2">
-                    <x-label for="stagiaire_id">Stagiaire disponible</x-label>
-                    <select id="stagiaire_id" name="stagiaire_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-supervisor focus:ring focus:ring-supervisor focus:ring-opacity-50" required>
-                        <option value="">Sélectionnez un stagiaire...</option>
-                        @foreach($availableStagiaires as $stagiaire)
-                            <option value="{{ $stagiaire->id }}">
-                                {{ $stagiaire->prenom }} {{ $stagiaire->nom }} ({{ $stagiaire->email }})
-                            </option>
-                        @endforeach
-                    </select>
+    <x-card-header>
+        <x-card-title>Associer un stagiaire</x-card-title>
+        <x-card-description>
+            Recherchez et sélectionnez un stagiaire à ajouter à votre supervision
+        </x-card-description>
+    </x-card-header>
+    <x-card-content class="space-y-4">
+        <form action="{{ route('superviseur.stagiaires.store') }}" method="POST" id="associate-form">
+            @csrf
+            <div class="space-y-4">
+                <div class="relative">
+                    <x-label for="search">Rechercher un stagiaire</x-label>
+                    <input type="text" id="search" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-supervisor focus:ring focus:ring-supervisor focus:ring-opacity-50" 
+                           placeholder="Tapez le nom ou l'email du stagiaire..."
+                           autocomplete="off">
+                    <div id="search-results" class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto"></div>
                 </div>
-                <x-card-footer class="mt-4">
-                    <x-button type="submit" class="bg-supervisor hover:bg-supervisor-light">
-                        Associer le stagiaire
-                    </x-button>
-                </x-card-footer>
-            </form>
-        </x-card-content>
-    </x-card>
+
+                <div id="selected-stagiaire-container" class="hidden">
+                    <input type="hidden" id="stagiaire_id" name="stagiaire_id" required>
+                    <div id="selected-stagiaire" class="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200 flex justify-between items-center">
+                        <div>
+                            <span id="selected-name" class="font-medium"></span>
+                            <span id="selected-email" class="text-sm text-gray-500 ml-2"></span>
+                        </div>
+                        <button type="button" id="clear-selection" class="text-red-500 hover:text-red-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <x-card-footer class="mt-4">
+                <x-button type="submit" class="bg-supervisor hover:bg-supervisor-light" id="submit-button" disabled>
+                    Associer le stagiaire
+                </x-button>
+            </x-card-footer>
+        </form>
+    </x-card-content>
+</x-card>
 
     <!-- Onglets -->
     <div x-data="{ activeTab: 'active' }">
@@ -87,16 +101,25 @@
                                 </div>
                             </div>
                             
-                            <form action="{{ route('superviseur.stagiaires.destroy', $stagiaire) }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <x-button variant="destructive" type="submit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Supprimer
-                                </x-button>
-                            </form>
+                            <div class="flex space-x-2">
+                                <form action="{{ route('superviseur.stagiaires.dissociate', $stagiaire) }}" method="POST">
+                                    @csrf
+                                    <x-button type="submit" variant="secondary">
+                                        Dissocier
+                                    </x-button>
+                                </form>
+                                <a href="{{ route('superviseur.stagiaires.details', $stagiaire) }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Détails
+                                </a>
+                                <form action="{{ route('superviseur.stagiaires.destroy', $stagiaire) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-button variant="destructive" type="submit">
+                                        Supprimer
+                                    </x-button>
+                                </form>
+                            </div>
                         </div>
                     </x-card-content>
                 </x-card>
@@ -126,16 +149,19 @@
                                     </div>
                                 </div>
                             </div>
-                            <form action="{{ route('superviseur.stagiaires.destroy', $stagiaire) }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <x-button variant="destructive" type="submit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Supprimer
-                                </x-button>
-                            </form>
+                            <div class="flex space-x-2">
+                                <a href="{{ route('superviseur.stagiaires.details', $stagiaire) }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Détails
+                                </a>
+                                <form action="{{ route('superviseur.stagiaires.destroy', $stagiaire) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-button variant="destructive" type="submit">
+                                        Supprimer
+                                    </x-button>
+                                </form>
+                            </div>
                         </div>
                     </x-card-content>
                 </x-card>
@@ -148,42 +174,101 @@
     </div>
 </div>
 
-<!-- Modal de confirmation de suppression -->
-<div x-data="{ showDeleteModal: false, stagiaireToDelete: null }">
-    <div x-show="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Confirmer la suppression</h3>
-                <p class="mb-4">Êtes-vous sûr de vouloir supprimer définitivement ce stagiaire ?</p>
-                <div class="mt-5 sm:mt-6 flex justify-between">
-                    <button @click="showDeleteModal = false" type="button" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-supervisor sm:text-sm">
-                        Annuler
-                    </button>
-                    <form :action="'{{ url('superviseur/stagiaires') }}/' + stagiaireToDelete" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
-                            Supprimer
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Script pour la recherche -->
 <script>
-    function confirmDelete(stagiaireId) {
-        window.dispatchEvent(new CustomEvent('delete-modal', { 
-            detail: { 
-                show: true,
-                stagiaireId: stagiaireId
-            }
-        }));
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const searchResults = document.getElementById('search-results');
+    const stagiaireIdInput = document.getElementById('stagiaire_id');
+    const selectedContainer = document.getElementById('selected-stagiaire-container');
+    const selectedName = document.getElementById('selected-name');
+    const selectedEmail = document.getElementById('selected-email');
+    const clearSelection = document.getElementById('clear-selection');
+    const submitButton = document.getElementById('submit-button');
+    const associateForm = document.getElementById('associate-form');
+
+    // Empêcher la soumission du formulaire avec Enter
+    associateForm.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+        }
+    });
+
+    // Gestion de la recherche
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        
+        if (query.length < 2) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        fetch(`{{ route('superviseur.stagiaires.search') }}?q=${encodeURIComponent(query)}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Erreur réseau');
+                return response.json();
+            })
+            .then(data => {
+                searchResults.innerHTML = '';
+                
+                if (data.length === 0) {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'p-3 text-gray-500 text-center';
+                    noResults.textContent = 'Aucun stagiaire trouvé';
+                    searchResults.appendChild(noResults);
+                } else {
+                    data.forEach(stagiaire => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0';
+                        resultItem.innerHTML = `
+                            <div class="font-medium">${stagiaire.prenom} ${stagiaire.nom}</div>
+                            <div class="text-sm text-gray-500">${stagiaire.email}</div>
+                        `;
+                        
+                        resultItem.addEventListener('click', function() {
+                            stagiaireIdInput.value = stagiaire.id;
+                            selectedName.textContent = `${stagiaire.prenom} ${stagiaire.nom}`;
+                            selectedEmail.textContent = stagiaire.email;
+                            selectedContainer.classList.remove('hidden');
+                            searchResults.classList.add('hidden');
+                            submitButton.disabled = false;
+                        });
+                        
+                        searchResults.appendChild(resultItem);
+                    });
+                }
+                
+                searchResults.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                searchResults.innerHTML = '<div class="p-3 text-red-500 text-center">Erreur lors de la recherche</div>';
+                searchResults.classList.remove('hidden');
+            });
+    });
+
+    // Gestion de la touche Entrée
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.dispatchEvent(new Event('input'));
+        }
+    });
+
+    clearSelection.addEventListener('click', function() {
+        stagiaireIdInput.value = '';
+        selectedContainer.classList.add('hidden');
+        submitButton.disabled = true;
+        searchInput.value = '';
+        searchInput.focus();
+    });
+
+    // Fermer les résultats quand on clique ailleurs
+    document.addEventListener('click', function(e) {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+        }
+    });
+});
 </script>
 @endsection
