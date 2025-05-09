@@ -182,15 +182,17 @@ Route::prefix('superviseur')->name('superviseur.')->middleware('auth:superviseur
     Route::get('/tasks/{task}/edit', [SuperviseurDashboardController::class, 'editTask'])->name('tasks.edit');
     Route::put('/tasks/{task}', [SuperviseurDashboardController::class, 'updateTask'])->name('tasks.update');
     Route::delete('/tasks/{task}', [SuperviseurDashboardController::class, 'destroyTask'])->name('tasks.destroy');
-    Route::get('/rapports', [SuperviseurDashboardController::class, 'rapports'])->name('rapports.index');
-    Route::get('/{rapport}', [SuperviseurDashboardController::class, 'showRapport'])->name('rapports.show');
-    Route::post('/{rapport}/approve', [SuperviseurDashboardController::class, 'approveRapport'])->name('rapports.approve');
-    Route::post('/{rapport}/reject', [SuperviseurDashboardController::class, 'rejectRapport'])->name('rapports.reject');
-    Route::get('/{attestation}/edit', [SuperviseurDashboardController::class, 'editAttestation'])->name('edit-attestation');
-    Route::put('/{attestation}', [SuperviseurDashboardController::class, 'updateAttestation'])->name('update-attestation');
-    Route::get('/{attestation}', [SuperviseurDashboardController::class, 'showAttestation'])->name('show-attestation');
-    Route::post('/{attestation}/send', [SuperviseurDashboardController::class, 'sendAttestation'])->name('send-attestation');
-     Route::post('/{attestation}/sign', [SuperviseurDashboardController::class, 'signAttestation'])->name('sign-attestation');
+    // Dans la section Superviseur, remplacez ces routes :
+Route::get('/rapports', [SuperviseurDashboardController::class, 'rapports'])->name('rapports.index');
+Route::get('/rapports/{rapport}', [SuperviseurDashboardController::class, 'showRapport'])->name('rapports.show');
+Route::get('/rapports/{rapport}/download', [SuperviseurDashboardController::class, 'downloadRapport'])->name('rapports.download');
+Route::post('/rapports/{rapport}/approve', [SuperviseurDashboardController::class, 'approveRapport'])->name('rapports.approve');
+Route::post('/rapports/{rapport}/reject', [SuperviseurDashboardController::class, 'rejectRapport'])->name('rapports.reject');
+Route::get('/attestations/{attestation}/edit', [SuperviseurDashboardController::class, 'editAttestation'])->name('rapports.edit-attestation');
+Route::put('/attestations/{attestation}', [SuperviseurDashboardController::class, 'updateAttestation'])->name('rapports.update-attestation');
+Route::get('/attestations/{attestation}', [SuperviseurDashboardController::class, 'showAttestation'])->name('rapports.show-attestation');
+Route::post('/attestations/{attestation}/send', [SuperviseurDashboardController::class, 'sendAttestation'])->name('rapports.send-attestation');
+Route::post('/attestations/{attestation}/sign', [SuperviseurDashboardController::class, 'signAttestation'])->name('rapports.sign-attestation');
     Route::post('/logout', [SuperviseurAuthController::class, 'logout'])->name('logout');
 });    
 

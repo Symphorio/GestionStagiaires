@@ -9,6 +9,8 @@ use App\Models\Rapport;
 use App\Models\Memoire;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Attestation;
 
 class SuperviseurDashboardController extends Controller
 {
@@ -442,7 +444,26 @@ public function showRapport(Rapport $rapport)
         abort(403);
     }
 
+    // Ajoutez la possibilité de télécharger le rapport
+    $rapport->download_url = route('superviseur.rapports.download', $rapport->id);
+
     return view('superviseur.rapport-show', compact('rapport'));
+}
+
+// Ajoutez cette méthode pour le téléchargement
+public function downloadRapport(Rapport $rapport)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    if (!Storage::exists($rapport->fichier)) {
+        abort(404);
+    }
+
+    return Storage::download($rapport->fichier, $rapport->titre . '.pdf');
 }
 
 /**
@@ -451,17 +472,22 @@ public function showRapport(Rapport $rapport)
 public function approveRapport(Request $request, Rapport $rapport)
 {
     $superviseurId = auth()->guard('superviseur')->id();
-    
+    $superviseur = auth()->guard('superviseur')->user();
+
     if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
         abort(403);
     }
 
     $rapport->update(['statut' => 'approuvé']);
 
-    // Créer une attestation associée
+    // Créer une attestation associée avec les valeurs minimales requises
     $attestation = Attestation::create([
         'rapport_id' => $rapport->id,
         'superviseur_id' => $superviseurId,
+        'superviseur_name' => $superviseur->prenom . ' ' . $superviseur->nom,
+        'company_name' => '', // Valeur par défaut
+        'company_address' => '', // Valeur par défaut
+        'activities' => json_encode([]), // Tableau vide encodé en JSON
         'statut' => 'en cours',
         'date_generation' => now(),
     ]);
@@ -490,7 +516,7 @@ public function rejectRapport(Request $request, Rapport $rapport)
         'feedback' => $request->feedback,
     ]);
 
-    return redirect()->route('superviseur.rapports')
+    return redirect()->route('superviseur.rapports.reject')
         ->with('success', 'Rapport rejeté avec succès.');
 }
 
