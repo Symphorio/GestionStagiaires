@@ -235,3 +235,9 @@ body {
 #details-modal.show .modal-container {
   transform: translateY(0);
 }
+
+.bg-orange-50 { background-color: #fff7ed; }
+.border-orange-100 { border-color: #fed7aa; }
+.text-orange-600 { color: #ea580c; }
+.bg-orange-600 { background-color: #ea580c; }
+.hover\:bg-orange-700:hover { background-color: #c2410c; }

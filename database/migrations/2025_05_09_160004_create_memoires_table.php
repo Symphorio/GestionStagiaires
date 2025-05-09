@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('memoires', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('stagiaire_id')->constrained('stagiaires');
+            $table->string('title');
+            $table->foreignId('stagiaire_id')->constrained();
+            $table->date('submit_date');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'revision'])->default('pending');
+            $table->text('summary')->nullable();
+            $table->string('field');
+            $table->text('feedback')->nullable();
+            $table->string('file_path');
             $table->timestamps();
         });
     }

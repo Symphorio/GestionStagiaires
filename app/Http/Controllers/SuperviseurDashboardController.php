@@ -28,7 +28,7 @@ class SuperviseurDashboardController extends Controller
             })->where('statut', 'en attente')->count(),
             'memoires_pending_count' => Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
                 $query->where('superviseur_id', $superviseurId);
-            })->where('statut', 'en attente')->count(),
+            })->where('status', 'en attente')->count(),
         ];
 
         $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
@@ -670,6 +670,77 @@ private function saveSignature($base64Image)
     Storage::put($imageName, base64_decode($image));
     
     return $imageName;
+}
+
+/**
+ * Affiche la liste des mémoires
+ */
+public function memoires()
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    $memoires = Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
+            $query->where('superviseur_id', $superviseurId);
+        })
+        ->with('stagiaire')
+        ->latest()
+        ->get();
+
+    return view('superviseur.memoires', compact('memoires'));
+}
+
+/**
+ * Traite les actions sur les mémoires
+ */
+/**
+ * Traite les actions sur les mémoires
+ */
+public function memoireAction(Request $request, Memoire $memoire)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($memoire->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    $request->validate([
+        'action' => 'required|in:approved,rejected,revision',
+        'feedback' => 'required_if:action,rejected,revision'
+    ]);
+
+    // Mise à jour du statut et du feedback
+    $memoire->update([
+        'status' => $request->action,
+        'feedback' => $request->feedback,
+        'review_requested_at' => ($request->action === 'revision') ? now() : null
+    ]);
+
+    $message = match($request->action) {
+        'approved' => 'Le mémoire a été approuvé avec succès',
+        'rejected' => 'Le mémoire a été rejeté avec le feedback fourni',
+        'revision' => 'Une demande de révision a été envoyée au stagiaire'
+    };
+
+    return redirect()->route('superviseur.memoires')
+        ->with('success', $message);
+}
+
+/**
+ * Télécharge un mémoire
+ */
+public function downloadMemoire(Memoire $memoire)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($memoire->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    if (!Storage::exists($memoire->file_path)) {
+        abort(404);
+    }
+
+    return Storage::download($memoire->file_path);
 }
 
 }

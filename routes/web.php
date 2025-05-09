@@ -193,6 +193,9 @@ Route::put('/attestations/{attestation}', [SuperviseurDashboardController::class
 Route::get('/attestations/{attestation}', [SuperviseurDashboardController::class, 'showAttestation'])->name('rapports.show-attestation');
 Route::post('/attestations/{attestation}/send', [SuperviseurDashboardController::class, 'sendAttestation'])->name('rapports.send-attestation');
 Route::post('/attestations/{attestation}/sign', [SuperviseurDashboardController::class, 'signAttestation'])->name('rapports.sign-attestation');
+Route::get('/memoires', [SuperviseurDashboardController::class, 'memoires'])->name('memoires');
+Route::post('/memoires/{memoire}/action', [SuperviseurDashboardController::class, 'memoireAction'])->name('memoires.action');
+Route::get('/memoires/{memoire}/download', [SuperviseurDashboardController::class, 'downloadMemoire'])->name('memoires.download');
     Route::post('/logout', [SuperviseurAuthController::class, 'logout'])->name('logout');
 });    
 

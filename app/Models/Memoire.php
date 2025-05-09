@@ -2,51 +2,64 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Memoire extends Model
 {
-    use HasFactory;
-
-    /**
-     * Les attributs qui sont mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
-        'titre',
-        'fichier',
-        'date_soumission',
-        'statut', // Ajout du champ statut
+        'title',
         'stagiaire_id',
-        'notes',
-        'feedback'
+        'submit_date',
+        'status',
+        'summary',
+        'field',
+        'feedback',
+        'file_path',
+        'feedback',
+        'review_requested_at',
+        'resubmitted_at',
     ];
 
-    /**
+    protected $casts = [
+        'submit_date' => 'datetime', // ou 'date'
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'review_requested_at' => 'datetime',
+        'resubmitted_at' => 'datetime'
+    ];
+
+    public function stagiaire(): BelongsTo
+    {
+        return $this->belongsTo(Stagiaire::class);
+    }
+
+    public function getStatusBadgeAttribute(): string
+    {
+        return match($this->status) {
+            'pending' => '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>',
+            'approved' => '<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Approuvé</span>',
+            'rejected' => '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Rejeté</span>',
+            'revision' => '<span class="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Révision demandée</span>',
+            default => '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Inconnu</span>'
+        };
+    }
+
+     /**
      * Les valeurs par défaut des attributs.
      *
      * @var array
      */
     protected $attributes = [
-        'statut' => 'en attente', // Valeur par défaut
+        'status' => 'en attente', // Valeur par défaut
     ];
-
-    /**
-     * Relation avec le modèle Stagiaire.
-     */
-    public function stagiaire()
-    {
-        return $this->belongsTo(Stagiaire::class);
-    }
 
     /**
      * Scope pour les mémoires en attente.
      */
     public function scopeEnAttente($query)
     {
-        return $query->where('statut', 'en attente');
+        return $query->where('status', 'en attente');
     }
 
     /**
@@ -54,7 +67,7 @@ class Memoire extends Model
      */
     public function scopeValide($query)
     {
-        return $query->where('statut', 'validé');
+        return $query->where('status', 'validé');
     }
 
     /**
@@ -62,22 +75,28 @@ class Memoire extends Model
      */
     public function scopeRejete($query)
     {
-        return $query->where('statut', 'rejeté');
+        return $query->where('status', 'rejeté');
     }
 
     /**
-     * Accesseur pour le statut formaté.
+     * Accesseur pour le status formaté.
      */
-    public function getStatutFormateAttribute()
+    public function getStatusFormateAttribute()
     {
-        return ucfirst($this->statut);
+        return ucfirst($this->status);
     }
 
     /**
-     * Mutateur pour normaliser le statut.
+     * Mutateur pour normaliser le status.
      */
-    public function setStatutAttribute($value)
+    public function setStatusAttribute($value)
     {
-        $this->attributes['statut'] = strtolower($value);
+        $this->attributes['status'] = strtolower($value);
     }
+
+    // Ajoutez cette méthode pour faciliter l'accès au fichier
+public function getFilePathAttribute($value)
+{
+    return 'public/memoires/' . $value;
+}
 }

@@ -243,31 +243,48 @@ class TableauDeBordStagiaireController extends Controller
         return view('stagiaire.soumission-memoire', [
             'memoireSoumis' => !is_null($dernierMemoire),
             'fichierMemoire' => $dernierMemoire ? $dernierMemoire->title : null,
-            'dernierMemoire' => $dernierMemoire
+            'dernierMemoire' => $dernierMemoire,
+            'dateSoumission' => $dernierMemoire ? $dernierMemoire->submit_date : null,
+            'enRevision' => $dernierMemoire && $dernierMemoire->status === 'revision'
         ]);
     }
 
     /**
      * Traite la soumission d'un mémoire
      */
-    public function SoumettreMemoire(Request $request)
+    public function soumettreMemoire(Request $request)
     {
         $request->validate([
-            'memoire_file' => 'required|file|mimes:pdf,doc,docx|max:20480',
-            'title' => 'required|string|max:255',
+            'memoire' => 'required|file|mimes:pdf,doc,docx|max:20480',
+            'titre' => 'required|string|max:255',
             'description' => 'nullable|string'
         ]);
-
-        $path = $request->file('memoire_file')->store('memoires');
-
-        Memoire::create([
+    
+        // Si c'est une resoumission après une demande de révision
+        $isResubmission = Memoire::where('stagiaire_id', auth('stagiaire')->id())
+                                ->where('status', 'revision')
+                                ->exists();
+    
+        // Stockage du fichier
+        $path = $request->file('memoire')->store('public/memoires');
+    
+        $memoireData = [
             'stagiaire_id' => auth('stagiaire')->id(),
-            'title' => $request->title,
-            'file_path' => $path,
-            'description' => $request->description
-        ]);
-
-        return redirect()->route('stagiaire.memoire')
+            'title' => $request->titre,
+            'file_path' => str_replace('public/', '', $path),
+            'summary' => $request->description ?? 'Aucun résumé fourni',
+            'field' => 'Non spécifié',
+            'submit_date' => now(),
+            'status' => 'pending'
+        ];
+    
+        if ($isResubmission) {
+            $memoireData['resubmitted_at'] = now();
+        }
+    
+        Memoire::create($memoireData);
+    
+        return redirect()->route('stagiaire.soumission-memoire')
                         ->with('success', 'Mémoire soumis avec succès');
     }
 
@@ -281,12 +298,14 @@ class TableauDeBordStagiaireController extends Controller
         if ($memoire->stagiaire_id !== auth('stagiaire')->id()) {
             abort(403, 'Accès non autorisé');
         }
-
-        if (!Storage::disk('public')->exists($memoire->file_path)) {
+    
+        $filePath = 'public/memoires/' . basename($memoire->file_path);
+    
+        if (!Storage::exists($filePath)) {
             abort(404, 'Fichier non trouvé');
         }
-
-        return Storage::disk('public')->download($memoire->file_path, $memoire->original_name);
+    
+        return Storage::download($filePath);
     }
 
     /**

@@ -21,6 +21,9 @@
     <meta http-equiv="Expires" content="0">
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.5/dist/cdn.min.js" defer></script>
+     <!-- Toastr -->
+     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -58,7 +61,7 @@
                             <span class="mr-3">📝</span>
                             Rapports
                         </a>
-                        <a href="#" 
+                        <a href="{{ route('superviseur.memoires') }}" 
                            class="flex items-center px-4 py-2 text-sm font-medium text-blue-200 hover:text-white hover:bg-blue-700 rounded-md group">
                             <span class="mr-3">📚</span>
                             Mémoires
