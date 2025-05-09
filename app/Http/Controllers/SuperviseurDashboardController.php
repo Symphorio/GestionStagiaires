@@ -516,7 +516,7 @@ public function rejectRapport(Request $request, Rapport $rapport)
         'feedback' => $request->feedback,
     ]);
 
-    return redirect()->route('superviseur.rapports.reject')
+    return redirect()->route('superviseur.rapports.show', $rapport)
         ->with('success', 'Rapport rejeté avec succès.');
 }
 
