@@ -2,19 +2,33 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex justify-between items-start">
-        <div>
-            <h1 class="text-2xl font-bold tracking-tight">{{ $rapport->titre }}</h1>
-            <p class="text-gray-500">
-                Par {{ $rapport->stagiaire->prenom }} {{ $rapport->stagiaire->nom }} • 
-                Soumis le {{ $rapport->created_at->format('d/m/Y') }}
-            </p>
-        </div>
+<div class="flex justify-between items-start">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight">{{ $rapport->titre }}</h1>
+        <p class="text-gray-500">
+            Par {{ $rapport->stagiaire->prenom }} {{ $rapport->stagiaire->nom }} • 
+            Soumis le {{ $rapport->created_at->format('d/m/Y') }}
+        </p>
+    </div>
+    
+    @if($rapport->download_url)
         <a href="{{ $rapport->download_url }}" 
            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             Télécharger le rapport
         </a>
-    </div>
+    @else
+        <div class="bg-yellow-50 p-3 rounded-md">
+            <p class="text-yellow-700 text-sm">
+                <span class="font-medium">Fichier indisponible</span><br>
+                @if(empty($rapport->file_path))
+                    (Aucun fichier enregistré)
+                @else
+                    (Fichier introuvable: {{ basename($rapport->file_path) }})
+                @endif
+            </p>
+        </div>
+    @endif
+</div>
 
     <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-4 py-5 sm:p-6">

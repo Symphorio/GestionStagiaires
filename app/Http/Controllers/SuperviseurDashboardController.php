@@ -444,26 +444,44 @@ public function showRapport(Rapport $rapport)
         abort(403);
     }
 
-    // Ajoutez la possibilité de télécharger le rapport
-    $rapport->download_url = route('superviseur.rapports.download', $rapport->id);
+    // Debug: Vérification complète du chemin
+    $storagePath = 'public/rapports/'.basename($rapport->file_path);
+    \Log::info('Vérification fichier rapport', [
+        'db_path' => $rapport->file_path,
+        'storage_path' => $storagePath,
+        'exists' => Storage::exists($storagePath),
+        'absolute_path' => storage_path('app/'.$storagePath)
+    ]);
+
+    if ($rapport->file_path && Storage::exists('public/rapports/'.basename($rapport->file_path))) {
+        $rapport->download_url = route('superviseur.rapports.download', $rapport->id);
+    } else {
+        $rapport->download_url = null;
+    }
 
     return view('superviseur.rapport-show', compact('rapport'));
 }
 
-// Ajoutez cette méthode pour le téléchargement
 public function downloadRapport(Rapport $rapport)
 {
     $superviseurId = auth()->guard('superviseur')->id();
-    
+
     if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
         abort(403);
     }
 
-    if (!Storage::exists($rapport->fichier)) {
-        abort(404);
+    $filename = basename($rapport->file_path);
+    $storagePath = 'public/rapports/'.$filename;
+
+    if (empty($filename)) {
+        abort(404, "Aucun fichier associé à ce rapport");
     }
 
-    return Storage::download($rapport->fichier, $rapport->titre . '.pdf');
+    if (!Storage::exists($storagePath)) {
+        abort(404, "Le fichier '$filename' n'existe pas dans storage/app/public/rapports/");
+    }
+
+    return Storage::download($storagePath, $rapport->original_name ?? $filename);
 }
 
 /**
