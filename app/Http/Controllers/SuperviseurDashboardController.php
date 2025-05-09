@@ -408,4 +408,224 @@ public function updateTask(Request $request, Tache $task)
                 return $status;
         }
     }
+
+
+    /**
+ * Affiche la liste des rapports
+ */
+public function rapports()
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    $rapports = Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
+            $query->where('superviseur_id', $superviseurId);
+        })
+        ->with('stagiaire')
+        ->latest()
+        ->get()
+        ->map(function($rapport) {
+            $rapport->status_badge = $this->getRapportStatusBadge($rapport->statut);
+            return $rapport;
+        });
+
+    return view('superviseur.rapports', compact('rapports'));
+}
+
+/**
+ * Affiche un rapport spécifique
+ */
+public function showRapport(Rapport $rapport)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    return view('superviseur.rapport-show', compact('rapport'));
+}
+
+/**
+ * Approuve un rapport
+ */
+public function approveRapport(Request $request, Rapport $rapport)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    $rapport->update(['statut' => 'approuvé']);
+
+    // Créer une attestation associée
+    $attestation = Attestation::create([
+        'rapport_id' => $rapport->id,
+        'superviseur_id' => $superviseurId,
+        'statut' => 'en cours',
+        'date_generation' => now(),
+    ]);
+
+    return redirect()->route('superviseur.rapports.edit-attestation', $attestation)
+        ->with('success', 'Rapport approuvé. Vous pouvez maintenant compléter l\'attestation.');
+}
+
+/**
+ * Rejette un rapport
+ */
+public function rejectRapport(Request $request, Rapport $rapport)
+{
+    $request->validate([
+        'feedback' => 'required|string|max:500',
+    ]);
+
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    $rapport->update([
+        'statut' => 'rejeté',
+        'feedback' => $request->feedback,
+    ]);
+
+    return redirect()->route('superviseur.rapports')
+        ->with('success', 'Rapport rejeté avec succès.');
+}
+
+/**
+ * Affiche le formulaire d'édition d'attestation
+ */
+public function editAttestation(Attestation $attestation)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($attestation->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    return view('superviseur.attestation-edit', compact('attestation'));
+}
+
+/**
+ * Met à jour une attestation
+ */
+public function updateAttestation(Request $request, Attestation $attestation)
+{
+    $request->validate([
+        'superviseur_name' => 'required|string|max:255',
+        'company_name' => 'required|string|max:255',
+        'company_address' => 'required|string',
+        'activities' => 'required|array',
+        'activities.*' => 'string|max:255',
+    ]);
+
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($attestation->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    $attestation->update([
+        'superviseur_name' => $request->superviseur_name,
+        'company_name' => $request->company_name,
+        'company_address' => $request->company_address,
+        'activities' => json_encode($request->activities),
+        'statut' => 'complété',
+    ]);
+
+    return redirect()->route('superviseur.rapports.show-attestation', $attestation)
+        ->with('success', 'Attestation mise à jour avec succès.');
+}
+
+/**
+ * Affiche une attestation
+ */
+public function showAttestation(Attestation $attestation)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($attestation->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    return view('superviseur.attestation-show', compact('attestation'));
+}
+
+/**
+ * Envoie une attestation au stagiaire
+ */
+public function sendAttestation(Attestation $attestation)
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($attestation->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    // Ici vous pourriez ajouter la logique d'envoi par email
+    $attestation->update(['date_envoi' => now()]);
+
+    return redirect()->route('superviseur.rapports.show-attestation', $attestation)
+        ->with('success', 'Attestation envoyée au stagiaire.');
+}
+
+/**
+ * Gère la signature de l'attestation
+ */
+public function signAttestation(Request $request, Attestation $attestation)
+{
+    $request->validate([
+        'signature' => 'required|string', // Base64 encoded image
+    ]);
+
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    if ($attestation->superviseur_id !== $superviseurId) {
+        abort(403);
+    }
+
+    // Sauvegarder la signature
+    $signaturePath = $this->saveSignature($request->signature);
+    
+    $attestation->update([
+        'signature_path' => $signaturePath,
+        'date_signature' => now(),
+    ]);
+
+    return response()->json(['success' => true, 'signature_url' => Storage::url($signaturePath)]);
+}
+
+/**
+ * Retourne le badge HTML pour le statut du rapport
+ */
+private function getRapportStatusBadge($status)
+{
+    switch ($status) {
+        case 'en attente':
+            return '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>';
+        case 'approuvé':
+            return '<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Approuvé</span>';
+        case 'rejeté':
+            return '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Rejeté</span>';
+        default:
+            return '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Inconnu</span>';
+    }
+}
+
+/**
+ * Sauvegarde une signature encodée en base64
+ */
+private function saveSignature($base64Image)
+{
+    $image = str_replace('data:image/png;base64,', '', $base64Image);
+    $image = str_replace(' ', '+', $image);
+    $imageName = 'signatures/' . uniqid() . '.png';
+    
+    Storage::put($imageName, base64_decode($image));
+    
+    return $imageName;
+}
+
 }

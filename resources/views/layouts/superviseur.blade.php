@@ -49,7 +49,7 @@
                             <span class="mr-3">📋</span>
                             Tâches
                         </a>
-                        <a href="#" 
+                        <a href="{{ route('superviseur.rapports.index') }}" 
                            class="flex items-center px-4 py-2 text-sm font-medium text-blue-200 hover:text-white hover:bg-blue-700 rounded-md group">
                             <span class="mr-3">📝</span>
                             Rapports
