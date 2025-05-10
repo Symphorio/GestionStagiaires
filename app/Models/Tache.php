@@ -27,10 +27,16 @@ class Tache extends Model
     ];
 
     // Accessor pour le texte du statut
-    public function getStatusTextAttribute()
-    {
-        return self::STATUSES[$this->status] ?? $this->status;
+public function getStatusTextAttribute()
+{
+    if ($this->status === 'completed') {
+        return 'Terminée';
+    } elseif ($this->deadline < now() && $this->status !== 'completed') {
+        return 'En échec';
+    } else {
+        return 'En cours';
     }
+}
 
     public function stagiaire()
     {

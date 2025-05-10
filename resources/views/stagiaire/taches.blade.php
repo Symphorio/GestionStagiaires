@@ -6,9 +6,12 @@
         <h1 class="text-2xl font-semibold">Mes Tâches</h1>
     </div>
     
-    <div class="space-y-6">
+    <div class="space-y-4">
         @foreach($taches as $tache)
-        <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="bg-white shadow rounded-lg overflow-hidden border-l-4 
+            @if($tache->status === 'completed') border-green-500
+            @elseif($tache->deadline < now()) border-red-500
+            @else border-amber-500 @endif">
             <div class="px-4 py-5 sm:p-6">
                 <div class="flex items-start justify-between">
                     <div>
@@ -17,17 +20,28 @@
                     </div>
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                         @if($tache->status === 'completed') bg-green-100 text-green-800
-                        @elseif($tache->status === 'late') bg-red-100 text-red-800
-                        @else bg-yellow-100 text-yellow-800 @endif">
-                        {{ $tache->status_text }}
+                        @elseif($tache->deadline < now()) bg-red-100 text-red-800
+                        @else bg-amber-100 text-amber-800 @endif">
+                        @if($tache->status === 'completed') Terminée
+                        @elseif($tache->deadline < now()) En échec
+                        @else En cours @endif
                     </span>
                 </div>
                 
                 <div class="mt-4 flex items-center justify-between">
                     <div class="text-sm text-gray-500">
-                        <span class="font-medium">Assignée par:</span> {{ $tache->assignedBy->name ?? 'Superviseur' }}
-                        <span class="mx-2">•</span>
-                        <span class="font-medium">Échéance:</span> {{ $tache->deadline->format('d/m/Y') }}
+                        <div class="flex items-center">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Échéance: {{ $tache->deadline->format('d/m/Y') }}
+                        </div>
+                        <div class="mt-1 flex items-center">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Assignée par: {{ $tache->assignedBy->nom ?? 'Superviseur' }}
+                        </div>
                     </div>
                     
                     <form action="{{ route('stagiaire.taches.update-status', $tache) }}" method="POST">
@@ -35,9 +49,8 @@
                         @method('PATCH')
                         <select name="status" onchange="this.form.submit()" 
                             class="mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-supervisor focus:border-supervisor sm:text-sm rounded-md">
-                            @foreach(App\Models\Tache::STATUSES as $value => $label)
-                                <option value="{{ $value }}" {{ $tache->status === $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
+                            <option value="in_progress" {{ $tache->status === 'in_progress' ? 'selected' : '' }}>En cours</option>
+                            <option value="completed" {{ $tache->status === 'completed' ? 'selected' : '' }}>Terminée</option>
                         </select>
                     </form>
                 </div>

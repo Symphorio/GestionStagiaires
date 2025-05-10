@@ -30,76 +30,83 @@ class TableauDeBordStagiaireController extends Controller
     }
 
     public function dashboard()
-    {
-        try {
-            $stagiaireId = auth('stagiaire')->id();
-            
-            if (!$stagiaireId) {
-                throw new \Exception('Utilisateur non authentifié');
-            }
-
-            // Statistiques des tâches
-            $tasksQuery = Tache::where('stagiaire_id', $stagiaireId);
-            
-            $completedTasks = (clone $tasksQuery)->where('status', 'completed')->count();
-            $pendingTasks = (clone $tasksQuery)->where('status', 'pending')->count();
-            $lateTasks = (clone $tasksQuery)
-                        ->where('status', 'pending')
-                        ->where('deadline', '<', now())
-                        ->count();
-            
-            $totalTasks = $completedTasks + $pendingTasks + $lateTasks;
-            
-            // Tâches récentes
-            $recentTasks = (clone $tasksQuery)
-                         ->orderBy('created_at', 'desc')
-                         ->take(3)
-                         ->get();
-
-            // Événements à venir
-            $upcomingEvents = Evenement::where('stagiaire_id', $stagiaireId)
-                                  ->where('date_debut', '>=', now())
-                                  ->orderBy('date_debut')
-                                  ->take(3)
-                                  ->get();
-
-            return view('stagiaire.dashboard', compact(
-                'completedTasks',
-                'pendingTasks',
-                'lateTasks',
-                'totalTasks',
-                'recentTasks',
-                'upcomingEvents'
-            ));
-
-        } catch (\Exception $e) {
-            \Log::error('Dashboard Error: '.$e->getMessage());
-            
-            if(request()->expectsJson()) {
-                return response()->json(['error' => 'Erreur du serveur'], 500);
-            }
-            
-            return back()->with('error', 'Une erreur est survenue: '.$e->getMessage());
-        }
-    }
-
-    public function taches()
-    {
+{
+    try {
         $stagiaireId = auth('stagiaire')->id();
         
-        $taches = Tache::with('assignedBy')
-            ->where('stagiaire_id', $stagiaireId)
-            ->orderBy('deadline', 'asc')
-            ->get()
-            ->map(function($tache) {
-                if ($tache->status !== 'completed' && $tache->deadline < now()) {
-                    $tache->status = 'late';
-                }
-                return $tache;
-            });
-    
-        return view('stagiaire.taches', compact('taches'));
+        if (!$stagiaireId) {
+            throw new \Exception('Utilisateur non authentifié');
+        }
+
+        // Statistiques des tâches
+        $tasksQuery = Tache::where('stagiaire_id', $stagiaireId);
+        
+        $completedTasks = (clone $tasksQuery)->where('status', 'completed')->count();
+        $pendingTasks = (clone $tasksQuery)->where('status', 'in_progress')->count();
+        $lateTasks = (clone $tasksQuery)
+                    ->where('status', '!=', 'completed')
+                    ->where('deadline', '<', now())
+                    ->count();
+        
+        $totalTasks = $tasksQuery->count();
+        
+        // Tâches récentes (3 dernières)
+        $recentTasks = (clone $tasksQuery)
+                     ->with('assignedBy')
+                     ->orderBy('created_at', 'desc')
+                     ->take(3)
+                     ->get()
+                     ->map(function($task) {
+                         if ($task->status !== 'completed' && $task->deadline < now()) {
+                             $task->status = 'late';
+                         }
+                         return $task;
+                     });
+
+        // Événements à venir
+        $upcomingEvents = Evenement::where('stagiaire_id', $stagiaireId)
+                              ->where('date_debut', '>=', now())
+                              ->orderBy('date_debut')
+                              ->take(3)
+                              ->get();
+
+        return view('stagiaire.dashboard', compact(
+            'completedTasks',
+            'pendingTasks',
+            'lateTasks',
+            'totalTasks',
+            'recentTasks',
+            'upcomingEvents'
+        ));
+
+    } catch (\Exception $e) {
+        \Log::error('Dashboard Error: '.$e->getMessage());
+        
+        if(request()->expectsJson()) {
+            return response()->json(['error' => 'Erreur du serveur'], 500);
+        }
+        
+        return back()->with('error', 'Une erreur est survenue: '.$e->getMessage());
     }
+}
+
+    public function taches()
+{
+    $stagiaireId = auth('stagiaire')->id();
+    
+    $taches = Tache::with('assignedBy')
+        ->where('stagiaire_id', $stagiaireId)
+        ->orderBy('deadline', 'asc')
+        ->get()
+        ->map(function($tache) {
+            if ($tache->status !== 'completed' && $tache->deadline < now()) {
+                $tache->status = 'late';
+            }
+            return $tache;
+        });
+
+    return view('stagiaire.taches', compact('taches'));
+}
     
     public function updateTaskStatus(Request $request, Tache $tache)
     {
