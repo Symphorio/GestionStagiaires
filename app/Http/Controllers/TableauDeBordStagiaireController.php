@@ -129,27 +129,30 @@ class TableauDeBordStagiaireController extends Controller
         ]);
     }
 
-    public function uploadRapport(Request $request)
-    {
-        $request->validate([
-            'report_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
-            'comments' => 'nullable|string|max:500'
-        ]);
+public function uploadRapport(Request $request)
+{
+    $request->validate([
+        'report_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
+        'comments' => 'nullable|string|max:500'
+    ]);
 
-        $file = $request->file('report_file');
-        $path = $file->store('rapports');
+    // Stocker dans public/rapports
+    $file = $request->file('report_file');
+    $path = $file->store('public/rapports');
 
-        Rapport::create([
-            'stagiaire_id' => auth('stagiaire')->id(),
-            'file_path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-            'comments' => $request->comments,
-            'submitted_at' => now()
-        ]);
+    // Enregistrer dans la base de données avec le chemin relatif
+    Rapport::create([
+        'stagiaire_id' => auth('stagiaire')->id(),
+        'file_path' => str_replace('public/', '', $path),
+        'original_name' => $file->getClientOriginalName(),
+        'comments' => $request->comments,
+        'submitted_at' => now(),
+        'statut' => 'en attente'
+    ]);
 
-        return redirect()->route('stagiaire.rapports')
-                        ->with('success', 'Rapport soumis avec succès');
-    }
+    return redirect()->route('stagiaire.rapports')
+                    ->with('success', 'Rapport soumis avec succès');
+}
 
     public function downloadRapport($id)
     {

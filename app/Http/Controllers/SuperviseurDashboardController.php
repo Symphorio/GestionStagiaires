@@ -445,15 +445,7 @@ public function showRapport(Rapport $rapport)
         abort(403);
     }
 
-    // Debug: Vérification complète du chemin
-    $storagePath = 'public/rapports/'.basename($rapport->file_path);
-    \Log::info('Vérification fichier rapport', [
-        'db_path' => $rapport->file_path,
-        'storage_path' => $storagePath,
-        'exists' => Storage::exists($storagePath),
-        'absolute_path' => storage_path('app/'.$storagePath)
-    ]);
-
+    // Vérifier si le fichier existe dans public/rapports
     if ($rapport->file_path && Storage::exists('public/rapports/'.basename($rapport->file_path))) {
         $rapport->download_url = route('superviseur.rapports.download', $rapport->id);
     } else {
