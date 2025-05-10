@@ -90,7 +90,7 @@ class TableauDeBordStagiaireController extends Controller
     }
 }
 
-    public function taches()
+public function taches()
 {
     $stagiaireId = auth('stagiaire')->id();
     
@@ -99,29 +99,35 @@ class TableauDeBordStagiaireController extends Controller
         ->orderBy('deadline', 'asc')
         ->get()
         ->map(function($tache) {
-            if ($tache->status !== 'completed' && $tache->deadline < now()) {
-                $tache->status = 'late';
+            // Marquer comme échec si date dépassée et statut pas "terminé"
+            if (($tache->status === 'pending' || $tache->status === 'in_progress') && $tache->deadline < now()) {
+                $tache->status = 'failed';
             }
             return $tache;
         });
 
     return view('stagiaire.taches', compact('taches'));
 }
-    
-    public function updateTaskStatus(Request $request, Tache $tache)
-    {
-        if ($tache->stagiaire_id !== auth('stagiaire')->id()) {
-            abort(403);
-        }
-    
-        $request->validate([
-            'status' => 'required|in:pending,in_progress,completed'
-        ]);
-    
-        $tache->update(['status' => $request->status]);
-    
-        return back()->with('success', 'Statut de la tâche mis à jour');
+
+public function updateTaskStatus(Request $request, Tache $tache)
+{
+    if ($tache->stagiaire_id !== auth('stagiaire')->id()) {
+        abort(403);
     }
+
+    // Empêcher modification si échec ou terminée
+    if ($tache->isFailed() || $tache->isCompleted()) {
+        return back()->with('error', 'Cette tâche ne peut plus être modifiée');
+    }
+
+    $request->validate([
+        'status' => 'required|in:in_progress,completed'
+    ]);
+
+    $tache->update(['status' => $request->status]);
+
+    return back()->with('success', 'Statut de la tâche mis à jour');
+}
 
     public function rapports()
     {
