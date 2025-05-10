@@ -682,7 +682,6 @@ public function signAttestation(Request $request, Attestation $attestation)
             throw new \Exception('Action non autorisée');
         }
 
-        // Vérifier et nettoyer l'image
         $signatureData = $request->signature;
         if (!preg_match('/^data:image\/png;base64,/', $signatureData)) {
             throw new \Exception('Format de signature invalide');
