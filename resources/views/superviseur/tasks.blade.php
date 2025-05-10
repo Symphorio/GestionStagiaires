@@ -151,27 +151,10 @@
                         <p class="text-xs text-gray-500">Échéance: {{ $task->deadline->format('d/m/Y') }}</p>
                     </x-card-content>
                     <x-card-footer class="border-t pt-3 flex justify-between">
-                        <div class="flex space-x-2">
-                            <a href="{{ route('superviseur.tasks.edit', $task) }}" 
-                               class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded text-sm">
-                               Modifier
-                            </a>
-                            <form action="{{ route('superviseur.tasks.update-status', $task) }}" method="POST" class="inline">
-                                @csrf
-                                @method('PATCH')
-                                <select 
-                                    name="status"
-                                    onchange="this.form.submit()"
-                                    class="rounded-md border-gray-300 shadow-sm focus:border-supervisor focus:ring focus:ring-supervisor focus:ring-opacity-50 text-sm"
-                                >
-                                    @foreach(App\Models\Tache::STATUSES as $value => $label)
-                                        <option value="{{ $value }}" {{ $task->status === $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </form>
-                        </div>
+                        <a href="{{ route('superviseur.tasks.edit', $task) }}" 
+                           class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded text-sm">
+                           Modifier
+                        </a>
                         <form action="{{ route('superviseur.tasks.destroy', $task) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')

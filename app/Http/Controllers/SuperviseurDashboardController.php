@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Attestation;
+use PDF;
 
 class SuperviseurDashboardController extends Controller
 {
@@ -484,6 +485,7 @@ public function downloadRapport(Rapport $rapport)
     return Storage::download($storagePath, $rapport->original_name ?? $filename);
 }
 
+
 /**
  * Approuve un rapport
  */
@@ -496,22 +498,32 @@ public function approveRapport(Request $request, Rapport $rapport)
         abort(403);
     }
 
-    $rapport->update(['statut' => 'approuvé']);
+    // Vérifier si une attestation existe déjà pour ce rapport
+    $existingAttestation = Attestation::where('rapport_id', $rapport->id)->first();
 
-    // Créer une attestation associée avec les valeurs minimales requises
+    if ($existingAttestation) {
+        // Si une attestation existe déjà, rediriger vers l'édition
+        return redirect()->route('superviseur.rapports.edit-attestation', $existingAttestation)
+            ->with('info', 'Une attestation existe déjà pour ce rapport. Vous pouvez la modifier.');
+    }
+
+    // Créer une nouvelle attestation avec des valeurs par défaut plus complètes
     $attestation = Attestation::create([
         'rapport_id' => $rapport->id,
         'superviseur_id' => $superviseurId,
         'superviseur_name' => $superviseur->prenom . ' ' . $superviseur->nom,
-        'company_name' => '', // Valeur par défaut
-        'company_address' => '', // Valeur par défaut
-        'activities' => json_encode([]), // Tableau vide encodé en JSON
+        'company_name' => $rapport->stagiaire->entreprise->nom ?? 'Nom de l\'entreprise',
+        'company_address' => $rapport->stagiaire->entreprise->adresse ?? 'Adresse de l\'entreprise',
+        'activities' => json_encode(['Activité 1', 'Activité 2']), // Valeurs par défaut
         'statut' => 'en cours',
         'date_generation' => now(),
     ]);
 
+    // Mettre à jour le statut du rapport
+    $rapport->update(['statut' => 'approuvé']);
+
     return redirect()->route('superviseur.rapports.edit-attestation', $attestation)
-        ->with('success', 'Rapport approuvé. Vous pouvez maintenant compléter l\'attestation.');
+        ->with('success', 'Rapport approuvé. Veuillez compléter les détails de l\'attestation.');
 }
 
 /**
@@ -538,6 +550,7 @@ public function rejectRapport(Request $request, Rapport $rapport)
         ->with('success', 'Rapport rejeté avec succès.');
 }
 
+
 /**
  * Affiche le formulaire d'édition d'attestation
  */
@@ -546,8 +559,11 @@ public function editAttestation(Attestation $attestation)
     $superviseurId = auth()->guard('superviseur')->id();
     
     if ($attestation->superviseur_id !== $superviseurId) {
-        abort(403);
+        abort(403, "Vous n'êtes pas autorisé à modifier cette attestation");
     }
+
+    // Charger les relations nécessaires
+    $attestation->load(['rapport.stagiaire']);
 
     return view('superviseur.attestation-edit', compact('attestation'));
 }
@@ -561,8 +577,7 @@ public function updateAttestation(Request $request, Attestation $attestation)
         'superviseur_name' => 'required|string|max:255',
         'company_name' => 'required|string|max:255',
         'company_address' => 'required|string',
-        'activities' => 'required|array',
-        'activities.*' => 'string|max:255',
+        'activities' => 'required|string', // Modifié car vous utilisez un textarea
     ]);
 
     $superviseurId = auth()->guard('superviseur')->id();
@@ -571,11 +586,16 @@ public function updateAttestation(Request $request, Attestation $attestation)
         abort(403);
     }
 
+    // Convertir le texte des activités en tableau
+    $activitiesArray = explode("\n", $request->activities);
+    $activitiesArray = array_map('trim', $activitiesArray);
+    $activitiesArray = array_filter($activitiesArray); // Supprime les lignes vides
+
     $attestation->update([
         'superviseur_name' => $request->superviseur_name,
         'company_name' => $request->company_name,
         'company_address' => $request->company_address,
-        'activities' => json_encode($request->activities),
+        'activities' => json_encode($activitiesArray),
         'statut' => 'complété',
     ]);
 
@@ -608,11 +628,42 @@ public function sendAttestation(Attestation $attestation)
         abort(403);
     }
 
-    // Ici vous pourriez ajouter la logique d'envoi par email
-    $attestation->update(['date_envoi' => now()]);
+    // Générer le PDF
+    $pdf = $this->generateAttestationPdf($attestation);
+    
+    // Chemin de stockage
+    $filename = 'attestation-'.$attestation->id.'.pdf';
+    $path = 'attestations/'.$filename;
+    
+    // Stocker dans storage/app/public/attestations
+    Storage::put('public/'.$path, $pdf->output());
+    
+    // Mettre à jour l'attestation
+    $attestation->update([
+        'file_path' => 'public/'.$path,
+        'date_envoi' => now(),
+        'statut' => Attestation::STATUS_SENT
+    ]);
 
-    return redirect()->route('superviseur.rapports.show-attestation', $attestation)
+    return redirect()
+        ->route('superviseur.rapports.show-attestation', $attestation)
         ->with('success', 'Attestation envoyée au stagiaire.');
+}
+
+private function generateAttestationPdf(Attestation $attestation)
+{
+    $activities = $attestation->activities;
+    
+    if (is_string($activities)) {
+        $activities = json_decode($activities, true) ?? [];
+    }
+    
+    $pdf = app('dompdf.wrapper')->loadView('pdf.attestation', [
+        'attestation' => $attestation,
+        'activities' => is_array($activities) ? $activities : []
+    ]);
+    
+    return $pdf;
 }
 
 /**
@@ -620,25 +671,70 @@ public function sendAttestation(Attestation $attestation)
  */
 public function signAttestation(Request $request, Attestation $attestation)
 {
-    $request->validate([
-        'signature' => 'required|string', // Base64 encoded image
-    ]);
+    try {
+        $request->validate([
+            'signature' => 'required|string',
+        ]);
 
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($attestation->superviseur_id !== $superviseurId) {
+            throw new \Exception('Action non autorisée');
+        }
+
+        // Vérifier et nettoyer l'image
+        $signatureData = $request->signature;
+        if (!preg_match('/^data:image\/png;base64,/', $signatureData)) {
+            throw new \Exception('Format de signature invalide');
+        }
+
+        // Sauvegarder la signature
+        $signaturePath = 'signatures/'.uniqid().'.png';
+        $imageData = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $signatureData));
+        
+        Storage::disk('public')->put($signaturePath, $imageData);
+
+        // Mettre à jour l'attestation
+        $attestation->update([
+            'signature_path' => $signaturePath,
+            'date_signature' => now(),
+            'statut' => Attestation::STATUS_SIGNED
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'redirect_url' => route('superviseur.rapports.edit-attestation', $attestation),
+            'message' => 'Signature enregistrée avec succès'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function showSignature(Attestation $attestation)
+{
     $superviseurId = auth()->guard('superviseur')->id();
     
     if ($attestation->superviseur_id !== $superviseurId) {
         abort(403);
     }
 
-    // Sauvegarder la signature
-    $signaturePath = $this->saveSignature($request->signature);
-    
-    $attestation->update([
-        'signature_path' => $signaturePath,
-        'date_signature' => now(),
-    ]);
+    return view('superviseur.signature', compact('attestation'));
+}
 
-    return response()->json(['success' => true, 'signature_url' => Storage::url($signaturePath)]);
+private function saveSignature($base64Image)
+{
+    $image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
+    $image = str_replace(' ', '+', $image);
+    $imageName = 'signatures/signature-'.time().'.png';
+    
+    Storage::disk('public')->put($imageName, base64_decode($image));
+    
+    return $imageName;
 }
 
 /**
@@ -656,20 +752,6 @@ private function getRapportStatusBadge($status)
         default:
             return '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Inconnu</span>';
     }
-}
-
-/**
- * Sauvegarde une signature encodée en base64
- */
-private function saveSignature($base64Image)
-{
-    $image = str_replace('data:image/png;base64,', '', $base64Image);
-    $image = str_replace(' ', '+', $image);
-    $imageName = 'signatures/' . uniqid() . '.png';
-    
-    Storage::put($imageName, base64_decode($image));
-    
-    return $imageName;
 }
 
 /**

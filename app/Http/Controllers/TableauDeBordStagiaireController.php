@@ -6,24 +6,28 @@ use Illuminate\Http\Request;
 use App\Models\Tache;
 use App\Models\Rapport;
 use App\Models\Memoire;
+use App\Models\Attestation;
 use App\Models\Evenement;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\Response;
 
 class TableauDeBordStagiaireController extends Controller
 {
-    
-    
     public function __construct()
-{
-    $this->middleware(function ($request, $next) {
-        $response = $next($request);
-        
-        return $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
-                       ->header('Pragma', 'no-cache')
-                       ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
-    });
-}
+    {
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+            
+            if (method_exists($response, 'header')) {
+                return $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
+                               ->header('Pragma', 'no-cache')
+                               ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+            }
+            
+            return $response;
+        });
+    }
 
     public function dashboard()
     {
@@ -79,9 +83,6 @@ class TableauDeBordStagiaireController extends Controller
         }
     }
 
-    /**
-     * Liste toutes les tâches
-     */
     public function taches()
     {
         $stagiaireId = auth('stagiaire')->id();
@@ -91,7 +92,6 @@ class TableauDeBordStagiaireController extends Controller
             ->orderBy('deadline', 'asc')
             ->get()
             ->map(function($tache) {
-                // Marquer les tâches en retard
                 if ($tache->status !== 'completed' && $tache->deadline < now()) {
                     $tache->status = 'late';
                 }
@@ -116,9 +116,6 @@ class TableauDeBordStagiaireController extends Controller
         return back()->with('success', 'Statut de la tâche mis à jour');
     }
 
-    /**
-     * Gestion des rapports
-     */
     public function rapports()
     {
         $stagiaireId = auth('stagiaire')->id();
@@ -132,51 +129,82 @@ class TableauDeBordStagiaireController extends Controller
         ]);
     }
 
-    /**
-     * Upload d'un rapport
-     */
     public function uploadRapport(Request $request)
-{
-    $request->validate([
-        'report_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
-        'comments' => 'nullable|string|max:500'
-    ]);
+    {
+        $request->validate([
+            'report_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
+            'comments' => 'nullable|string|max:500'
+        ]);
 
-    $file = $request->file('report_file');
-    $path = $file->store('rapports');
+        $file = $request->file('report_file');
+        $path = $file->store('rapports');
 
-    Rapport::create([
-        'stagiaire_id' => auth('stagiaire')->id(),
-        'file_path' => $path,
-        'original_name' => $file->getClientOriginalName(),
-        'comments' => $request->comments,
-        'submitted_at' => now()
-    ]);
+        Rapport::create([
+            'stagiaire_id' => auth('stagiaire')->id(),
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'comments' => $request->comments,
+            'submitted_at' => now()
+        ]);
 
-    return redirect()->route('stagiaire.rapports')
-                    ->with('success', 'Rapport soumis avec succès');
-}
-
-    /**
-     * Téléchargement d'un rapport
-     */
-    public function downloadRapport($id)
-{
-    $rapport = Rapport::findOrFail($id);
-    
-    if ($rapport->stagiaire_id !== auth('stagiaire')->id()) {
-        abort(403);
+        return redirect()->route('stagiaire.rapports')
+                        ->with('success', 'Rapport soumis avec succès');
     }
 
-    return Storage::download(
-        $rapport->file_path, 
-        $rapport->original_name
-    );
-}
+    public function downloadRapport($id)
+    {
+        $rapport = Rapport::findOrFail($id);
+        
+        if ($rapport->stagiaire_id !== auth('stagiaire')->id()) {
+            abort(403);
+        }
 
-    /**
-     * Gestion des mémoires - Vue liste
-     */
+        return response()->file(storage_path('app/'.$rapport->file_path), [
+            'Content-Disposition' => 'attachment; filename="'.$rapport->original_name.'"'
+        ]);
+    }
+
+    public function attestations()
+    {
+        $stagiaireId = auth('stagiaire')->id();
+        
+        $attestations = Attestation::whereHas('rapport', function($query) use ($stagiaireId) {
+                $query->where('stagiaire_id', $stagiaireId);
+            })
+            ->with(['rapport', 'superviseur'])
+            ->latest('date_generation')
+            ->get();
+
+        return view('stagiaire.attestation', compact('attestations'));
+    }
+
+    public function downloadAttestation(Attestation $attestation)
+    {
+        $stagiaireId = auth('stagiaire')->id();
+        
+        if ($attestation->rapport->stagiaire_id !== $stagiaireId) {
+            abort(403);
+        }
+
+        if (!$attestation->file_path || !Storage::exists($attestation->file_path)) {
+            abort(404, "L'attestation n'est pas encore disponible");
+        }
+
+        return response()->file(storage_path('app/'.$attestation->file_path), [
+            'Content-Disposition' => 'attachment; filename="attestation-'.$attestation->rapport->stagiaire->nom.'.pdf"'
+        ]);
+    }
+
+    private function generateAttestationPdf(Attestation $attestation)
+    {
+        $pdf = app('dompdf.wrapper')->loadView('pdf.attestation', [
+            'attestation' => $attestation,
+            'activities' => is_array($attestation->activities) ? $attestation->activities : []
+        ]);
+        
+        return $pdf;
+    }
+
     public function memoire()
     {
         $stagiaireId = auth('stagiaire')->id();
@@ -190,9 +218,6 @@ class TableauDeBordStagiaireController extends Controller
         ]);
     }
 
-    /**
-     * Upload d'un mémoire
-     */
     public function uploadMemoire(Request $request)
     {
         $request->validate([
@@ -215,9 +240,6 @@ class TableauDeBordStagiaireController extends Controller
                         ->with('success', 'Mémoire soumis avec succès');
     }
 
-    /**
-     * Téléchargement d'un mémoire
-     */
     public function downloadMemoire($id)
     {
         $memoire = Memoire::findOrFail($id);
@@ -226,12 +248,11 @@ class TableauDeBordStagiaireController extends Controller
             abort(403);
         }
 
-        return Storage::download($memoire->file_path);
+        return response()->file(storage_path('app/'.$memoire->file_path), [
+            'Content-Disposition' => 'attachment; filename="'.$memoire->title.'.'.pathinfo($memoire->file_path, PATHINFO_EXTENSION).'"'
+        ]);
     }
 
-    /**
-     * Affiche la page de soumission de mémoire
-     */
     public function afficherSoumissionMemoire()
     {
         $stagiaireId = auth('stagiaire')->id();
@@ -249,9 +270,6 @@ class TableauDeBordStagiaireController extends Controller
         ]);
     }
 
-    /**
-     * Traite la soumission d'un mémoire
-     */
     public function soumettreMemoire(Request $request)
     {
         $request->validate([
@@ -260,12 +278,10 @@ class TableauDeBordStagiaireController extends Controller
             'description' => 'nullable|string'
         ]);
     
-        // Si c'est une resoumission après une demande de révision
         $isResubmission = Memoire::where('stagiaire_id', auth('stagiaire')->id())
                                 ->where('status', 'revision')
                                 ->exists();
     
-        // Stockage du fichier
         $path = $request->file('memoire')->store('public/memoires');
     
         $memoireData = [
@@ -288,9 +304,6 @@ class TableauDeBordStagiaireController extends Controller
                         ->with('success', 'Mémoire soumis avec succès');
     }
 
-    /**
-     * Télécharge un mémoire soumis
-     */
     public function telechargerMemoire($id)
     {
         $memoire = Memoire::findOrFail($id);
@@ -305,115 +318,103 @@ class TableauDeBordStagiaireController extends Controller
             abort(404, 'Fichier non trouvé');
         }
     
-        return Storage::download($filePath);
+        return response()->file(storage_path('app/'.$filePath), [
+            'Content-Disposition' => 'attachment; filename="'.$memoire->title.'.'.pathinfo($filePath, PATHINFO_EXTENSION).'"'
+        ]);
     }
 
-    /**
-     * Affiche le profil du stagiaire
-     */
     public function profil()
-{
-    $stagiaire = auth('stagiaire')->user()->load(['demandeStage', 'profile']);
-    
-    if (!$stagiaire->profile) {
-        $stagiaire->profile()->create();
+    {
+        $stagiaire = auth('stagiaire')->user()->load(['demandeStage', 'profile']);
+        
+        if (!$stagiaire->profile) {
+            $stagiaire->profile()->create();
+        }
+
+        $profil = [
+            'fullName' => $stagiaire->nom.' '.$stagiaire->prenom,
+            'email' => $stagiaire->email,
+            'phone' => $stagiaire->demandeStage->phone ?? 'Non renseigné',
+            'internId' => $stagiaire->intern_id,
+            'department' => $stagiaire->demandeStage->department ?? 'Non renseigné',
+            'supervisor' => $stagiaire->demandeStage->supervisor ?? 'Non renseigné',
+            'period' => $stagiaire->demandeStage->period ?? 'Non renseigné',
+            'avatarUrl' => $stagiaire->profile->avatar_path 
+                          ? Storage::url($stagiaire->profile->avatar_path)
+                          : null
+        ];
+
+        return view('stagiaire.profil', compact('profil'));
     }
 
-    $profil = [
-        'fullName' => $stagiaire->nom.' '.$stagiaire->prenom,
-        'email' => $stagiaire->email,
-        'phone' => $stagiaire->demandeStage->phone ?? 'Non renseigné',
-        'internId' => $stagiaire->intern_id,
-        'department' => $stagiaire->demandeStage->department ?? 'Non renseigné',
-        'supervisor' => $stagiaire->demandeStage->supervisor ?? 'Non renseigné',
-        'period' => $stagiaire->demandeStage->period ?? 'Non renseigné',
-        'avatarUrl' => $stagiaire->profile->avatar_path 
-                      ? Storage::url($stagiaire->profile->avatar_path)
-                      : null
-    ];
+    public function updateProfil(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-    return view('stagiaire.profil', compact('profil'));
-}
+        $stagiaire = auth('stagiaire')->user();
+        
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars/stagiaires', 'public');
+            $stagiaire->profile()->updateOrCreate(
+                ['stagiaire_id' => $stagiaire->id],
+                ['avatar_path' => $path]
+            );
+        }
 
-public function updateProfil(Request $request)
-{
-    $request->validate([
-        'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
+        return back()->with('success', 'Avatar mis à jour avec succès');
+    }
 
-    $stagiaire = auth('stagiaire')->user();
-    
-    if ($request->hasFile('avatar')) {
-        $path = $request->file('avatar')->store('avatars/stagiaires', 'public');
-        $stagiaire->profile()->updateOrCreate(
-            ['stagiaire_id' => $stagiaire->id],
-            ['avatar_path' => $path]
+    public function parametres()
+    {
+        $user = auth('stagiaire')->user();
+        
+        $userParametres = $user->parametres()->firstOrCreate(
+            ['stagiaire_id' => $user->id],
+            [
+                'notifications' => true,
+                'email_alerts' => true,
+                'dark_mode' => false,
+                'language' => 'fr'
+            ]
         );
+
+        return view('stagiaire.parametres', compact('userParametres'));
     }
 
-    return back()->with('success', 'Avatar mis à jour avec succès');
-}
+    public function update(Request $request)
+    {
+        $validated = $request->validate([
+            'notifications' => 'sometimes|boolean',
+            'email_alerts' => 'sometimes|boolean',
+            'dark_mode' => 'sometimes|boolean',
+            'language' => 'sometimes|in:fr,en'
+        ]);
 
-    /**
- * Affiche les paramètres du stagiaire
- */
-public function parametres()
-{
-    $user = auth('stagiaire')->user();
-    
-    $userParametres = $user->parametres()->firstOrCreate(
-        ['stagiaire_id' => $user->id],
-        [
-            'notifications' => true,
-            'email_alerts' => true,
-            'dark_mode' => false,
-            'language' => 'fr'
-        ]
-    );
+        auth('stagiaire')->user()->parametres()->updateOrCreate(
+            ['stagiaire_id' => auth('stagiaire')->id()],
+            $validated
+        );
 
-    return view('stagiaire.parametres', compact('userParametres'));
-}
+        return response()->json(['success' => true]);
+    }
 
-/**
- * Met à jour les paramètres
- */
-public function update(Request $request)
-{
-    $validated = $request->validate([
-        'notifications' => 'sometimes|boolean',
-        'email_alerts' => 'sometimes|boolean',
-        'dark_mode' => 'sometimes|boolean',
-        'language' => 'sometimes|in:fr,en'
-    ]);
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|current_password:stagiaire'
+        ]);
 
-    auth('stagiaire')->user()->parametres()->updateOrCreate(
-        ['stagiaire_id' => auth('stagiaire')->id()],
-        $validated
-    );
+        $user = auth('stagiaire')->user();
+        
+        auth('stagiaire')->logout();
+        
+        $user->delete();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    return response()->json(['success' => true]);
-}
-
-/**
- * Supprime le compte
- */
-public function destroy(Request $request)
-{
-    $request->validate([
-        'password' => 'required|current_password:stagiaire'
-    ]);
-
-    $user = auth('stagiaire')->user();
-    
-    // Déconnexion avant suppression
-    auth('stagiaire')->logout();
-    
-    // Suppression de l'utilisateur
-    $user->delete();
-    
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return redirect('/')->with('success', 'Votre compte a été supprimé avec succès');
-}
+        return redirect('/')->with('success', 'Votre compte a été supprimé avec succès');
+    }
 }

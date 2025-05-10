@@ -12,7 +12,8 @@
         "laravel/tinker": "^2.8",
         "laravel/fortify": "^1.17",
         "spatie/laravel-permission": "^6.0",
-        "laravel/jetstream": "^4.3"
+        "laravel/jetstream": "^4.3",
+        "barryvdh/laravel-dompdf": "^3.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.8",

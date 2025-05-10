@@ -108,6 +108,8 @@ Route::prefix('stagiaire')->name('stagiaire.')->middleware('auth:stagiaire')->gr
     Route::get('/soumission-memoire', [TableauDeBordStagiaireController::class, 'afficherSoumissionMemoire'])->name('soumission-memoire');
     Route::post('/soumettre-memoire', [TableauDeBordStagiaireController::class, 'soumettreMemoire'])->name('soumettre-memoire');
     Route::get('/telecharger-memoire/{id}', [TableauDeBordStagiaireController::class, 'telechargerMemoire'])->name('telecharger-memoire');
+    Route::get('/attestations', [TableauDeBordStagiaireController::class, 'attestations'])->name('attestations');
+Route::get('/attestations/{attestation}/download', [TableauDeBordStagiaireController::class, 'downloadAttestation'])->name('attestations.download');
 
     // Profil & Paramètres
     Route::get('/profil', [TableauDeBordStagiaireController::class, 'profil'])->name('profil');
@@ -183,14 +185,18 @@ Route::prefix('superviseur')->name('superviseur.')->middleware('auth:superviseur
     Route::put('/tasks/{task}', [SuperviseurDashboardController::class, 'updateTask'])->name('tasks.update');
     Route::delete('/tasks/{task}', [SuperviseurDashboardController::class, 'destroyTask'])->name('tasks.destroy');
     // Dans la section Superviseur, remplacez ces routes :
+// Routes pour les rapports
 Route::get('/rapports', [SuperviseurDashboardController::class, 'rapports'])->name('rapports.index');
 Route::get('/rapports/{rapport}', [SuperviseurDashboardController::class, 'showRapport'])->name('rapports.show');
 Route::get('/rapports/{rapport}/download', [SuperviseurDashboardController::class, 'downloadRapport'])->name('rapports.download');
 Route::post('/rapports/{rapport}/approve', [SuperviseurDashboardController::class, 'approveRapport'])->name('rapports.approve');
 Route::post('/rapports/{rapport}/reject', [SuperviseurDashboardController::class, 'rejectRapport'])->name('rapports.reject');
+
+// Routes pour les attestations
 Route::get('/attestations/{attestation}/edit', [SuperviseurDashboardController::class, 'editAttestation'])->name('rapports.edit-attestation');
 Route::put('/attestations/{attestation}', [SuperviseurDashboardController::class, 'updateAttestation'])->name('rapports.update-attestation');
 Route::get('/attestations/{attestation}', [SuperviseurDashboardController::class, 'showAttestation'])->name('rapports.show-attestation');
+Route::get('/attestations/{attestation}/signature', [SuperviseurDashboardController::class, 'showSignature'])->name('rapports.signature');
 Route::post('/attestations/{attestation}/send', [SuperviseurDashboardController::class, 'sendAttestation'])->name('rapports.send-attestation');
 Route::post('/attestations/{attestation}/sign', [SuperviseurDashboardController::class, 'signAttestation'])->name('rapports.sign-attestation');
 Route::get('/memoires', [SuperviseurDashboardController::class, 'memoires'])->name('memoires');
