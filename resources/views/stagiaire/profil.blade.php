@@ -5,6 +5,7 @@
     <h1 class="text-2xl font-semibold">Mon Profil</h1>
     
     <div class="glass-card p-6">
+        <!-- En-tête du profil avec avatar et bouton d'édition -->
         <div class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
             <div class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                 @if($profil['avatarUrl'])
@@ -18,9 +19,9 @@
             
             <div class="text-center md:text-left">
                 <h2 class="text-xl font-medium">{{ $profil['fullName'] }}</h2>
-                <p class="text-gray-500 mb-4">Stagiaire en {{ $profil['department'] }}</p>
+                <p class="text-gray-500">Stagiaire en {{ $profil['specialisation'] ?? 'Non spécifié' }}</p>
                 
-                <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+                <div class="mt-4">
                     <button
                         onclick="document.getElementById('edit-profil-modal').classList.remove('hidden')"
                         class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -34,45 +35,55 @@
             </div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <hr class="my-6 border-gray-200">
+        
+        <!-- Contenu principal du profil -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Section Informations Personnelles -->
-            <div>
-                <h3 class="text-lg font-medium mb-4">Informations Personnelles</h3>
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h3 class="text-lg font-medium mb-4 pb-2 border-b border-gray-200">Informations Personnelles</h3>
                 <div class="space-y-4">
-                    <div>
-                        <p class="text-sm text-gray-500">Nom complet</p>
-                        <p class="font-medium">{{ $profil['fullName'] }}</p>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">Nom complet</span>
+                        <span class="font-medium mt-1">{{ $profil['fullName'] }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Email</p>
-                        <p class="font-medium">{{ $profil['email'] }}</p>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">Email</span>
+                        <span class="font-medium mt-1">{{ $profil['email'] }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Téléphone (depuis la demande)</p>
-                        <p class="font-medium">{{ $profil['phone'] ?? 'Non renseigné' }}</p>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">Téléphone</span>
+                        <span class="font-medium mt-1">{{ $profil['phone'] ?? 'Non renseigné' }}</span>
                     </div>
                 </div>
             </div>
             
             <!-- Section Informations du Stage -->
-            <div>
-                <h3 class="text-lg font-medium mb-4">Informations du Stage</h3>
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h3 class="text-lg font-medium mb-4 pb-2 border-b border-gray-200">Informations du Stage</h3>
                 <div class="space-y-4">
-                    <div>
-                        <p class="text-sm text-gray-500">ID Stagiaire</p>
-                        <p class="font-medium">{{ $profil['internId'] }}</p>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">ID Stagiaire</span>
+                        <span class="font-medium mt-1">{{ $profil['internId'] }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Département</p>
-                        <p class="font-medium">{{ $profil['department'] }}</p>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">Département</span>
+                        <span class="font-medium mt-1">{{ $profil['department'] ?? 'Non renseigné' }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Encadreur</p>
-                        <p class="font-medium">{{ $profil['supervisor'] }}</p>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">Encadreur</span>
+                        <span class="font-medium mt-1">{{ $profil['supervisor'] ?? 'Non renseigné' }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Période</p>
-                        <p class="font-medium">{{ $profil['period'] }}</p>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">Période</span>
+                        <span class="font-medium mt-1">
+                            @if($profil['date_debut'] && $profil['date_fin'])
+                                Du {{ \Carbon\Carbon::parse($profil['date_debut'])->format('d/m/Y') }} 
+                                au {{ \Carbon\Carbon::parse($profil['date_fin'])->format('d/m/Y') }}
+                            @else
+                                Non renseigné
+                            @endif
+                        </span>
                     </div>
                 </div>
             </div>
@@ -116,6 +127,39 @@
                                     </div>
                                     
                                     <div>
+                                        <label for="department" class="block text-sm font-medium text-gray-700">Département</label>
+                                        <select
+                                            name="department"
+                                            id="department"
+                                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        >
+                                            <option value="">Sélectionnez un département</option>
+                                            <option value="Direction Juridique" {{ old('department', $profil['department'] ?? '') == 'Direction Juridique' ? 'selected' : '' }}>Direction Juridique</option>
+                                            <option value="Direction Financière" {{ old('department', $profil['department'] ?? '') == 'Direction Financière' ? 'selected' : '' }}>Direction Financière</option>
+                                            <option value="Ressources Humaines" {{ old('department', $profil['department'] ?? '') == 'Ressources Humaines' ? 'selected' : '' }}>Ressources Humaines</option>
+                                            <option value="Informatique" {{ old('department', $profil['department'] ?? '') == 'Informatique' ? 'selected' : '' }}>Informatique</option>
+                                        </select>
+                                        @error('department')
+                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="supervisor" class="block text-sm font-medium text-gray-700">Encadreur</label>
+                                        <input
+                                            type="text"
+                                            name="supervisor"
+                                            id="supervisor"
+                                            value="{{ old('supervisor', $profil['supervisor'] ?? '') }}"
+                                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                            placeholder="Entrez le nom de votre encadreur"
+                                        >
+                                        @error('supervisor')
+                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    
+                                    <div>
                                         <label for="avatar" class="block text-sm font-medium text-gray-700">Photo de profil</label>
                                         <input
                                             type="file"
@@ -140,38 +184,39 @@
                                             </div>
                                         @endif
                                     </div>
+                                </div>
+                                
+                                <!-- Section Informations non modifiables -->
+                                <div class="border p-4 rounded-md bg-gray-50">
+                                    <h4 class="font-medium mb-4 text-gray-800">Informations non modifiables</h4>
                                     
-                                    <!-- Section Informations non modifiables -->
-                                    <div class="border p-4 rounded-md bg-gray-50">
-                                        <h4 class="font-medium mb-4 text-gray-800">Informations non modifiables</h4>
-                                        
-                                        <div class="space-y-4">
-                                            <div>
-                                                <p class="text-sm text-gray-500">Nom complet</p>
-                                                <p class="font-medium mt-1">{{ $profil['fullName'] }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm text-gray-500">Email</p>
-                                                <p class="font-medium mt-1">{{ $profil['email'] }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm text-gray-500">ID Stagiaire</p>
-                                                <p class="font-medium mt-1">{{ $profil['internId'] }}</p>
-                                            </div>
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <p class="text-sm text-gray-500">Département</p>
-                                                    <p class="font-medium mt-1">{{ $profil['department'] }}</p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm text-gray-500">Encadreur</p>
-                                                    <p class="font-medium mt-1">{{ $profil['supervisor'] }}</p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm text-gray-500">Période</p>
-                                                    <p class="font-medium mt-1">{{ $profil['period'] }}</p>
-                                                </div>
-                                            </div>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">Nom complet</p>
+                                            <p class="font-medium mt-1">{{ $profil['fullName'] }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Email</p>
+                                            <p class="font-medium mt-1">{{ $profil['email'] }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">ID Stagiaire</p>
+                                            <p class="font-medium mt-1">{{ $profil['internId'] }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Spécialisation</p>
+                                            <p class="font-medium mt-1">{{ $profil['specialisation'] ?? 'Non spécifié' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Période de stage</p>
+                                            <p class="font-medium mt-1">
+                                                @if($profil['date_debut'] && $profil['date_fin'])
+                                                    Du {{ \Carbon\Carbon::parse($profil['date_debut'])->format('d/m/Y') }} 
+                                                    au {{ \Carbon\Carbon::parse($profil['date_fin'])->format('d/m/Y') }}
+                                                @else
+                                                    Non renseigné
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

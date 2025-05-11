@@ -339,48 +339,69 @@ public function uploadRapport(Request $request)
         ]);
     }
 
-    public function profil()
-    {
-        $stagiaire = auth('stagiaire')->user()->load(['demandeStage', 'profile']);
-        
-        if (!$stagiaire->profile) {
-            $stagiaire->profile()->create();
-        }
+public function profil()
+{
+    $stagiaire = auth('stagiaire')->user()->load(['profile']);
+    
+    $profile = $stagiaire->profile()->firstOrCreate([]);
 
-        $profil = [
-            'fullName' => $stagiaire->nom.' '.$stagiaire->prenom,
-            'email' => $stagiaire->email,
-            'phone' => $stagiaire->demandeStage->phone ?? 'Non renseigné',
-            'internId' => $stagiaire->intern_id,
-            'department' => $stagiaire->demandeStage->department ?? 'Non renseigné',
-            'supervisor' => $stagiaire->demandeStage->supervisor ?? 'Non renseigné',
-            'period' => $stagiaire->demandeStage->period ?? 'Non renseigné',
-            'avatarUrl' => $stagiaire->profile->avatar_path 
-                          ? Storage::url($stagiaire->profile->avatar_path)
-                          : null
-        ];
+    $profil = [
+        'fullName' => $stagiaire->nom.' '.$stagiaire->prenom,
+        'email' => $stagiaire->email,
+        'phone' => $stagiaire->demandeStage->telephone ?? 'Non renseigné',
+        'internId' => $stagiaire->intern_id,
+        'department' => $profile->department ?? 'Non renseigné',
+        'supervisor' => $profile->supervisor ?? 'Non renseigné',
+        'date_debut' => $stagiaire->demandeStage->date_debut ?? null,
+        'date_fin' => $stagiaire->demandeStage->date_fin ?? null,
+        'specialisation' => $stagiaire->demandeStage->specialisation ?? null,
+        'avatarUrl' => $profile->avatar_path 
+                      ? Storage::url($profile->avatar_path)
+                      : null
+    ];
 
-        return view('stagiaire.profil', compact('profil'));
+    return view('stagiaire.profil', compact('profil'));
+}
+
+public function updateProfil(Request $request)
+{
+    $request->validate([
+        'phone' => 'sometimes|string|max:20',
+        'department' => 'sometimes|string|max:255',
+        'supervisor' => 'sometimes|string|max:255',
+        'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
+
+    $stagiaire = auth('stagiaire')->user();
+    
+    // Mettre à jour le téléphone dans la demande de stage
+    if ($request->has('phone') && $stagiaire->demandeStage) {
+        $stagiaire->demandeStage->update(['telephone' => $request->phone]);
     }
-
-    public function updateProfil(Request $request)
-    {
-        $request->validate([
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $stagiaire = auth('stagiaire')->user();
-        
-        if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('avatars/stagiaires', 'public');
-            $stagiaire->profile()->updateOrCreate(
-                ['stagiaire_id' => $stagiaire->id],
-                ['avatar_path' => $path]
-            );
-        }
-
-        return back()->with('success', 'Avatar mis à jour avec succès');
+    
+    // Mettre à jour le profile
+    $profileData = [];
+    
+    if ($request->has('department')) {
+        $profileData['department'] = $request->department;
     }
+    
+    if ($request->has('supervisor')) {
+        $profileData['supervisor'] = $request->supervisor;
+    }
+    
+    if ($request->hasFile('avatar')) {
+        $path = $request->file('avatar')->store('avatars/stagiaires', 'public');
+        $profileData['avatar_path'] = $path;
+    }
+    
+    $stagiaire->profile()->updateOrCreate(
+        ['stagiaire_id' => $stagiaire->id],
+        $profileData
+    );
+
+    return back()->with('success', 'Profil mis à jour avec succès');
+}
 
     public function parametres()
     {
