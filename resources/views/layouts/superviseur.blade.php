@@ -23,16 +23,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.5/dist/cdn.min.js" defer></script>
-     <!-- Toastr -->
-     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <!-- Toastr -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Signature Pad -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-<script>
-  lucide.createIcons();
-</script>
+    <script>lucide.createIcons();</script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -49,46 +49,58 @@
                     <span class="text-xl font-semibold">Superviseur</span>
                 </div>
                 <div class="flex-1 overflow-y-auto">
-                    <nav class="px-2 py-4 space-y-1">
-                        <a href="{{ route('superviseur.dashboard') }}" 
-                           class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-900 rounded-md group">
-                            <span class="mr-3">📊</span>
-                            Tableau de bord
-                        </a>
-                        <a href="{{ route('superviseur.stagiaires') }}" 
-                           class="flex items-center px-4 py-2 text-sm font-medium text-blue-200 hover:text-white hover:bg-blue-700 rounded-md group">
-                            <span class="mr-3">👥</span>
-                            Stagiaires
-                        </a>
-                        <a href="{{ route('superviseur.tasks') }}" 
-                           class="flex items-center px-4 py-2 text-sm font-medium text-blue-200 hover:text-white hover:bg-blue-700 rounded-md group">
-                            <span class="mr-3">📋</span>
-                            Tâches
-                        </a>
-                        <a href="{{ route('superviseur.rapports.index') }}" 
-                           class="flex items-center px-4 py-2 text-sm font-medium text-blue-200 hover:text-white hover:bg-blue-700 rounded-md group">
-                            <span class="mr-3">📝</span>
-                            Rapports
-                        </a>
-                        <a href="{{ route('superviseur.memoires') }}" 
-                           class="flex items-center px-4 py-2 text-sm font-medium text-blue-200 hover:text-white hover:bg-blue-700 rounded-md group">
-                            <span class="mr-3">📚</span>
-                            Mémoires
-                        </a>
+                    <nav class="px-2 py-4">
+                        <!-- Premier élément avec marge supplémentaire en bas -->
+                        <div class="mb-6">
+                            <a href="{{ route('superviseur.dashboard') }}" 
+                               class="flex items-center px-4 py-3 text-sm font-medium text-white rounded-md group transition-all duration-200
+                                      {{ request()->routeIs('superviseur.dashboard') ? 'bg-blue-900 shadow-md scale-[1.02]' : 'bg-blue-800 hover:bg-blue-700 hover:scale-[1.02]' }}">
+                                <span class="mr-3">📊</span>
+                                Tableau de bord
+                            </a>
+                        </div>
+                        
+                        <!-- Groupe des autres liens avec espacement régulier -->
+                        <div class="space-y-3">
+                            <a href="{{ route('superviseur.stagiaires') }}" 
+                               class="flex items-center px-4 py-3 text-sm font-medium rounded-md group transition-all duration-200
+                                      {{ request()->routeIs('superviseur.stagiaires') ? 'bg-blue-900 text-white shadow-md scale-[1.02]' : 'text-blue-200 hover:text-white hover:bg-blue-700 hover:scale-[1.02]' }}">
+                                <span class="mr-3">👥</span>
+                                Stagiaires
+                            </a>
+                            <a href="{{ route('superviseur.tasks') }}" 
+                               class="flex items-center px-4 py-3 text-sm font-medium rounded-md group transition-all duration-200
+                                      {{ request()->routeIs('superviseur.tasks') ? 'bg-blue-900 text-white shadow-md scale-[1.02]' : 'text-blue-200 hover:text-white hover:bg-blue-700 hover:scale-[1.02]' }}">
+                                <span class="mr-3">📋</span>
+                                Tâches
+                            </a>
+                            <a href="{{ route('superviseur.rapports.index') }}" 
+                               class="flex items-center px-4 py-3 text-sm font-medium rounded-md group transition-all duration-200
+                                      {{ request()->routeIs('superviseur.rapports.*') ? 'bg-blue-900 text-white shadow-md scale-[1.02]' : 'text-blue-200 hover:text-white hover:bg-blue-700 hover:scale-[1.02]' }}">
+                                <span class="mr-3">📝</span>
+                                Rapports
+                            </a>
+                            <a href="{{ route('superviseur.memoires') }}" 
+                               class="flex items-center px-4 py-3 text-sm font-medium rounded-md group transition-all duration-200
+                                      {{ request()->routeIs('superviseur.memoires') ? 'bg-blue-900 text-white shadow-md scale-[1.02]' : 'text-blue-200 hover:text-white hover:bg-blue-700 hover:scale-[1.02]' }}">
+                                <span class="mr-3">📚</span>
+                                Mémoires
+                            </a>
+                        </div>
                     </nav>
                 </div>
+                
+                <!-- Section de déconnexion épurée -->
                 <div class="p-4 border-t border-blue-700">
-                    <div class="flex items-center">
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-white">{{ Auth::guard('superviseur')->user()->name }}</p>
-                            <form method="POST" action="{{ route('logout') }}">
-    @csrf
-    <button type="submit" class="text-xs font-medium text-blue-200 hover:text-white">
-        Déconnexion
-    </button>
-</form>
-                        </div>
-                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" 
+                                class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-blue-700 hover:bg-blue-600 rounded-md transition-all duration-200
+                                       hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Déconnexion
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

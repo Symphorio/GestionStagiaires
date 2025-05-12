@@ -15,46 +15,59 @@ use PDF;
 
 class SuperviseurDashboardController extends Controller
 {
-    public function index()
-    {
-        $superviseurId = auth()->guard('superviseur')->id();
+public function index()
+{
+    $superviseurId = auth()->guard('superviseur')->id();
 
-        $stats = [
-            'stagiaires_count' => Stagiaire::where('superviseur_id', $superviseurId)->count(),
-            'taches_count' => Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
-                $query->where('superviseur_id', $superviseurId);
-            })->where('status', '!=', 'terminé')->count(),
-            'rapports_pending_count' => Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
-                $query->where('superviseur_id', $superviseurId);
-            })->where('statut', 'en attente')->count(),
-            'memoires_pending_count' => Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
-                $query->where('superviseur_id', $superviseurId);
-            })->where('status', 'en attente')->count(),
-        ];
+    $stats = [
+        'stagiaires_count' => Stagiaire::where('superviseur_id', $superviseurId)->count(),
+        'taches_count' => Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
+            $query->where('superviseur_id', $superviseurId);
+        })->where('status', '!=', 'terminé')->count(),
+        'rapports_pending_count' => Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
+            $query->where('superviseur_id', $superviseurId);
+        })->where('statut', 'en attente')->count(),
+        'memoires_pending_count' => Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
+            $query->where('superviseur_id', $superviseurId);
+        })->where('status', 'en attente')->count(),
+    ];
 
-        $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-            ->withCount(['taches as completed_tasks' => function($query) {
-                $query->where('statut', 'terminé');
-            }])
-            ->withCount('taches')
-            ->get()
-            ->map(function($stagiaire) {
-                $stagiaire->progress = $stagiaire->taches_count > 0 
-                    ? round(($stagiaire->completed_tasks / $stagiaire->taches_count) * 100, 2)
+    // Récupération des stagiaires avec progression
+    $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+        ->with(['demandeStage', 'taches'])
+        ->get()
+        ->map(function($stagiaire) {
+            if ($stagiaire->demandeStage) {
+                $now = now();
+                $start = Carbon::parse($stagiaire->demandeStage->date_debut);
+                $end = Carbon::parse($stagiaire->demandeStage->date_fin);
+                
+                $totalDays = $start->diffInDays($end);
+                $elapsedDays = $now->diffInDays($start);
+                
+                $stagiaire->progress = $totalDays > 0 
+                    ? min(round(($elapsedDays / $totalDays) * 100), 100)
                     : 0;
-                return $stagiaire;
-            });
+            } else {
+                $stagiaire->progress = 0;
+            }
+            return $stagiaire;
+        });
 
-        $taches = Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
-                $query->where('superviseur_id', $superviseurId);
-            })
-            ->with('stagiaire')
-            ->latest()
-            ->limit(5)
-            ->get();
+    // Récupération des tâches avec le titre
+    $taches = Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
+            $query->where('superviseur_id', $superviseurId);
+        })
+        ->with(['stagiaire' => function($query) {
+            $query->select('id', 'prenom', 'nom');
+        }])
+        ->select('id', 'title', 'stagiaire_id') // Assurez-vous d'inclure le titre
+        ->latest()
+        ->limit(5)
+        ->get();
 
-        return view('superviseur.dashboard', compact('stats', 'stagiaires', 'taches'));
-    }
+    return view('superviseur.dashboard', compact('stats', 'stagiaires', 'taches'));
+}
 
     public function stagiaires()
     {
