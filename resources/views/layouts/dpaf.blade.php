@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DPAF Admin Dashboard</title>
     <meta name="description" content="Système de gestion des demandes administratives" />
@@ -25,9 +25,11 @@
 </head>
 <body class="bg-gray-100">
     <div class="min-h-screen flex">
+        <!-- Sidebar fixe -->
         @include('partials.sidebar-dpaf')
         
-        <main class="flex-1 p-8 bg-slate-50 overflow-auto">
+        <!-- Contenu principal avec marge -->
+        <main class="flex-1 ml-64 p-8 bg-slate-50 overflow-auto">
             @yield('content')
         </main>
     </div>

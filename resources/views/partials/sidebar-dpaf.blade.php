@@ -7,14 +7,14 @@
     $currentPath = url()->current();
 @endphp
 
-<div class="w-64 bg-white shadow-lg flex flex-col">
+<div class="fixed h-screen w-64 bg-white shadow-lg flex flex-col" style="top: 0; left: 0;">
     <!-- Logo/Title -->
     <div class="p-4 border-b">
         <h2 class="text-xl font-bold text-gray-800">DPAF</h2>
     </div>
     
-    <!-- Navigation -->
-    <nav class="flex-1 p-4">
+    <!-- Navigation - Contenu scrollable -->
+    <nav class="flex-1 p-4 overflow-y-auto">
         <ul class="space-y-2">
             @foreach($navigationLinks as $link)
                 <li>
@@ -28,11 +28,11 @@
         </ul>
     </nav>
     
-    <!-- Logout -->
-    <div class="p-4 border-t">
+    <!-- Logout - Toujours fixé en bas -->
+    <div class="p-4 border-t mt-auto">
         <form action="{{ route('logout') }}" method="POST">
             @csrf
-            <button type="submit" class="w-full flex items-center p-3 text-gray-600 rounded-lg hover:bg-gray-100">
+            <button type="submit" class="w-full flex items-center p-3 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
                 <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
                 Déconnexion
             </button>

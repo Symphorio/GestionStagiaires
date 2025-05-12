@@ -68,6 +68,19 @@ class DpafDashboardController extends Controller
         return back()->with('success', 'Demande transférée au SRHDS avec succès');
     }
 
+    public function pendingRequests()
+{
+    $demandes = DemandeStage::with(['stagiaire', 'department'])
+        ->where('status', 'transferee_dpaf')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return view('dpaf.requests-pending', [
+        'demandes' => $demandes,
+        'count' => $demandes->count()
+    ]);
+}
+
     public function authorizeRequests()
     {
         // Seules les demandes avec département assigné et statut 'department_assigned'
