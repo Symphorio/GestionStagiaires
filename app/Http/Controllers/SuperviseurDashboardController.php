@@ -19,10 +19,28 @@ public function index()
 {
     $superviseurId = auth()->guard('superviseur')->id();
 
+    // Vérifier et mettre à jour les stagiaires dont le stage est terminé
+    $stagiairesAVerifier = Stagiaire::where('superviseur_id', $superviseurId)
+        ->where('statut', 'actif')
+        ->whereHas('demandeStage')
+        ->with('demandeStage')
+        ->get();
+
+    foreach ($stagiairesAVerifier as $stagiaire) {
+        $dateFin = Carbon::parse($stagiaire->demandeStage->date_fin);
+        if (now() >= $dateFin) {
+            $stagiaire->update(['statut' => 'terminé']);
+        }
+    }
+
+    // Statistiques
     $stats = [
-        'stagiaires_count' => Stagiaire::where('superviseur_id', $superviseurId)->count(),
+        'stagiaires_count' => Stagiaire::where('superviseur_id', $superviseurId)
+            ->where('statut', 'actif')
+            ->count(),
         'taches_count' => Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
-            $query->where('superviseur_id', $superviseurId);
+            $query->where('superviseur_id', $superviseurId)
+                  ->where('statut', 'actif');
         })->where('status', '!=', 'terminé')->count(),
         'rapports_pending_count' => Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
             $query->where('superviseur_id', $superviseurId);
@@ -32,95 +50,106 @@ public function index()
         })->where('status', 'en attente')->count(),
     ];
 
-    // Récupération des stagiaires avec progression
+    // Stagiaires actifs avec progression
     $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-        ->with(['demandeStage', 'taches'])
+        ->where('statut', 'actif')
+        ->whereHas('demandeStage')
+        ->with('demandeStage')
         ->get()
         ->map(function($stagiaire) {
-            if ($stagiaire->demandeStage) {
-                $now = now();
-                $start = Carbon::parse($stagiaire->demandeStage->date_debut);
-                $end = Carbon::parse($stagiaire->demandeStage->date_fin);
+            $now = now();
+            $start = Carbon::parse($stagiaire->demandeStage->date_debut);
+            $end = Carbon::parse($stagiaire->demandeStage->date_fin);
+            
+            $totalDays = $start->diffInDays($end);
+            $elapsedDays = $now->diffInDays($start);
+            
+            $stagiaire->progress = $totalDays > 0 
+                ? min(round(($elapsedDays / $totalDays) * 100), 100)
+                : 0;
                 
-                $totalDays = $start->diffInDays($end);
-                $elapsedDays = $now->diffInDays($start);
-                
-                $stagiaire->progress = $totalDays > 0 
-                    ? min(round(($elapsedDays / $totalDays) * 100), 100)
-                    : 0;
-            } else {
-                $stagiaire->progress = 0;
-            }
             return $stagiaire;
         });
 
-    // Récupération des tâches avec le titre
+    // Tâches récentes avec titre et stagiaire assigné
     $taches = Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
             $query->where('superviseur_id', $superviseurId);
         })
         ->with(['stagiaire' => function($query) {
             $query->select('id', 'prenom', 'nom');
         }])
-        ->select('id', 'title', 'stagiaire_id') // Assurez-vous d'inclure le titre
+        ->select('id', 'title', 'status', 'deadline', 'stagiaire_id')
         ->latest()
         ->limit(5)
         ->get();
 
-    return view('superviseur.dashboard', compact('stats', 'stagiaires', 'taches'));
+    return view('superviseur.dashboard', [
+        'stats' => $stats,
+        'stagiaires' => $stagiaires,
+        'taches' => $taches
+    ]);
 }
 
     public function stagiaires()
-    {
-        $superviseurId = auth()->guard('superviseur')->id();
-        
-        // Seulement les stagiaires avec demandeStage
-        $activeStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-            ->where('statut', 'actif')
-            ->whereHas('demandeStage')
-            ->with(['taches', 'demandeStage'])
-            ->withCount([
-                'taches as taches_completees' => function($query) {
-                    $query->where('statut', 'terminé');
-                },
-                'taches as taches_total'
-            ])
-            ->get()
-            ->map(function($stagiaire) {
-                $now = now();
-                $start = Carbon::parse($stagiaire->demandeStage->date_debut);
-                $end = Carbon::parse($stagiaire->demandeStage->date_fin);
-                
-                $totalDays = $start->diffInDays($end);
-                $elapsedDays = $now->diffInDays($start);
-                
-                $stagiaire->progress = $totalDays > 0 
-                    ? min(round(($elapsedDays / $totalDays) * 100), 100)
-                    : 0;
-                    
-                return $stagiaire;
-            });
+{
+    $superviseurId = auth()->guard('superviseur')->id();
+    
+    // Vérifier et mettre à jour le statut des stagiaires dont le stage est terminé
+    $stagiairesAVerifier = Stagiaire::where('superviseur_id', $superviseurId)
+        ->where('statut', 'actif')
+        ->whereHas('demandeStage')
+        ->with('demandeStage')
+        ->get();
 
-        // Stagiaires terminés
-        $completedStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-            ->where('statut', 'terminé')
-            ->with(['taches', 'demandeStage'])
-            ->get()
-            ->map(function($stagiaire) {
-                $stagiaire->progress = 100;
-                return $stagiaire;
-            });
-    
-        // Stagiaires disponibles
-        $availableStagiaires = Stagiaire::whereNull('superviseur_id')
-            ->where('is_validated', true)
-            ->get();
-    
-        return view('superviseur.stagiaire', [
-            'activeStagiaires' => $activeStagiaires,
-            'completedStagiaires' => $completedStagiaires,
-            'availableStagiaires' => $availableStagiaires
-        ]);
+    foreach ($stagiairesAVerifier as $stagiaire) {
+        $dateFin = Carbon::parse($stagiaire->demandeStage->date_fin);
+        if (now() >= $dateFin) {
+            $stagiaire->update(['statut' => 'terminé']);
+        }
     }
+
+    // Stagiaires actifs (en cours de stage)
+    $activeStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+        ->where('statut', 'actif')
+        ->whereHas('demandeStage')
+        ->with(['taches', 'demandeStage'])
+        ->get()
+        ->map(function($stagiaire) {
+            $now = now();
+            $start = Carbon::parse($stagiaire->demandeStage->date_debut);
+            $end = Carbon::parse($stagiaire->demandeStage->date_fin);
+            
+            $totalDays = $start->diffInDays($end);
+            $elapsedDays = $now->diffInDays($start);
+            
+            $stagiaire->progress = $totalDays > 0 
+                ? min(round(($elapsedDays / $totalDays) * 100), 100)
+                : 0;
+                
+            return $stagiaire;
+        });
+
+    // Stagiaires terminés (date de fin atteinte)
+    $completedStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+        ->where('statut', 'terminé')
+        ->with(['taches', 'demandeStage'])
+        ->get()
+        ->map(function($stagiaire) {
+            $stagiaire->progress = 100; // Forcer à 100% pour les stages terminés
+            return $stagiaire;
+        });
+
+    // Stagiaires disponibles (non assignés)
+    $availableStagiaires = Stagiaire::whereNull('superviseur_id')
+        ->where('is_validated', true)
+        ->get();
+    
+    return view('superviseur.stagiaire', [
+        'activeStagiaires' => $activeStagiaires,
+        'completedStagiaires' => $completedStagiaires,
+        'availableStagiaires' => $availableStagiaires
+    ]);
+}
     
     public function search(Request $request)
     {
