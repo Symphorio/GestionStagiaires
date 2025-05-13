@@ -32,3 +32,5 @@ Route::post('/verify-stagiaire-code', function(Request $request) {
       'message' => $valid ? 'Valide' : 'Combinaison invalide ou compte déjà créé'
   ]);
 });
+
+Route::get('/stagiaires/{id}/archives', [SuperviseurDashboardController::class, 'getArchives'])->middleware('auth:superviseur');

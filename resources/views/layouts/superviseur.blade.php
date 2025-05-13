@@ -34,11 +34,14 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
 
+    <script src="//unpkg.com/alpinejs" defer></script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
-        [x-cloak] { display: none !important; }
-    </style>
+   <style>
+    [x-cloak] { display: none !important; }
+    .modal-override { display: flex !important; }
+</style>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">

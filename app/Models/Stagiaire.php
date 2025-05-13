@@ -76,6 +76,18 @@ class Stagiaire extends Authenticatable
         return $this->hasMany(Tache::class);
     }
 
+    public function rapports() {
+    return $this->hasMany(Rapport::class);
+}
+
+public function memoires() {
+    return $this->hasMany(Memoire::class);
+}
+
+public function attestations() {
+    return $this->hasMany(Attestation::class);
+}
+
     // Scopes
     public function scopeActifs($query)
     {

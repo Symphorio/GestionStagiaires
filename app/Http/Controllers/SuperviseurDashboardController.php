@@ -260,6 +260,46 @@ public function index()
             ->with('success', 'Stagiaire supprimé avec succès');
     }
 
+public function getArchives($id)
+{
+    $stagiaire = Stagiaire::with(['demandeStage', 'taches', 'rapports'])->findOrFail($id);
+
+    return response()->json([
+        'prenom' => $stagiaire->prenom,
+        'nom' => $stagiaire->nom,
+        'date_debut' => $stagiaire->demandeStage->date_debut->format('d/m/Y'),
+        'date_fin' => $stagiaire->demandeStage->date_fin->format('d/m/Y'),
+        'duree' => $this->calculateDuration($stagiaire->demandeStage),
+        'departement' => $stagiaire->demandeStage->departement,
+        'taches_reussies' => $stagiaire->taches->where('statut', 'terminé')->count(),
+        'taches_echouees' => $stagiaire->taches->where('statut', '!=', 'terminé')->count(),
+        'taux_reussite' => $this->calculateSuccessRate($stagiaire),
+        'documents' => [
+            [
+                'nom' => 'Rapport de stage',
+                'soumis' => $stagiaire->rapports->isNotEmpty(),
+                'lien' => $stagiaire->rapports->isNotEmpty() 
+                    ? route('superviseur.rapports.download', $stagiaire->rapports->first()->id)
+                    : '#'
+            ]
+        ]
+    ]);
+}
+
+private function calculateDuration($demandeStage)
+{
+    $start = Carbon::parse($demandeStage->date_debut);
+    $end = Carbon::parse($demandeStage->date_fin);
+    return $start->diffInMonths($end) . ' mois';
+}
+
+private function calculateSuccessRate($stagiaire)
+{
+    $total = $stagiaire->taches->count();
+    $success = $stagiaire->taches->where('statut', 'terminé')->count();
+    return $total > 0 ? round(($success / $total) * 100) . '%' : '0%';
+}
+
         /**
      * Affiche la liste des tâches
      */
