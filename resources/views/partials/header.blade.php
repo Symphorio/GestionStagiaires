@@ -1,6 +1,8 @@
 <header class="fixed w-full bg-white shadow-sm z-50">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div class="flex items-center">
+        <div class="flex items-center space-x-2">
+            <!-- Ajout du logo -->
+            <img src="{{ asset('images/MASM.png') }}" alt="Logo MASM" class="h-10 w-auto">
             <a href="/" class="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors duration-300">MASM Stages</a>
         </div>
         <nav class="hidden md:flex space-x-6 items-center"> <!-- Réduit l'espacement entre les liens -->

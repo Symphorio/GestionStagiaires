@@ -90,14 +90,15 @@
     @include('partials.header')
     
 <!-- Hero Section -->
-<section class="pt-32 pb-16 md:pt-40 md:pb-24 px-4">
-    <div class="container mx-auto max-w-5xl">
+<section class="relative pt-32 pb-16 md:pt-40 md:pb-24 px-4 bg-cover bg-center" style="background-image: url('{{ asset('images/demande.jpg') }}');">
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="relative container mx-auto max-w-5xl text-white">
         <div class="text-center space-y-6">
             <div class="opacity-0 animate-fade-in-up animation-delay-100">
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight drop-shadow-lg">
                     Plateforme de Gestion des Stagiaires
                 </h1>
-                <p class="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
+                <p class="mt-6 text-xl max-w-3xl mx-auto drop-shadow">
                     Ministère des Affaires Sociales et de la Microfinance
                 </p>
             </div>
@@ -109,7 +110,7 @@
                 </x-glass-button>
                 
                 <a href="{{ route('stagiaire.login') }}" 
-                   class="hover-scale px-6 py-3 rounded-lg font-medium border border-gray-300 hover:bg-gray-100 transition-all">
+                   class="hover-scale px-6 py-3 rounded-lg font-medium border border-white hover:bg-white hover:text-black transition-all">
                    Espace Stagiaire
                 </a>
             </div>
@@ -123,6 +124,7 @@
         </div>
     </div>
 </section>
+
 
 <!-- Accès aux espaces réservés -->
 <section class="py-12 bg-gray-50">
@@ -154,115 +156,130 @@
 </section>
     
     <!-- Features Section -->
-    <section class="py-16 md:py-24 bg-gray-100 px-4">
-        <div class="container mx-auto max-w-6xl">
-            <div class="opacity-0 animate-fade-in-up text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold">Un Processus Simple et Efficace</h2>
-                <p class="mt-4 text-gray-600 max-w-2xl mx-auto">
-                    Notre plateforme vous accompagne à chaque étape de votre stage, de la demande jusqu'à l'obtention de votre attestation.
-                </p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                @php
-                    $features = [
-                        [
-                            'icon' => 'check-circle',
-                            'title' => "Procédure Simplifiée",
-                            'description' => "Soumettez votre demande en quelques clics et suivez son statut directement depuis notre plateforme."
-                        ],
-                        [
-                            'icon' => 'clock',
-                            'title' => "Suivi en Temps Réel",
-                            'description' => "Accédez à votre espace personnel pour suivre l'avancement de vos tâches et respecter vos délais."
-                        ],
-                        [
-                            'icon' => 'file-check',
-                            'title' => "Gestion des Rapports",
-                            'description' => "Soumettez vos rapports de stage et recevez les commentaires de vos encadreurs directement sur la plateforme."
-                        ],
-                        [
-                            'icon' => 'user-check',
-                            'title' => "Attestation Automatisée",
-                            'description' => "Recevez automatiquement votre attestation de stage une fois validée par votre encadreur."
-                        ]
-                    ];
-                @endphp
+    <section class="py-16 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900">Un Processus Simple et Efficace</h2>
+            <p class="mt-4 text-gray-600">
+                Notre plateforme vous accompagne à chaque étape de votre stage, de la demande jusqu'à l'obtention de votre attestation.
+            </p>
+        </div>
 
-                @foreach($features as $index => $feature)
-                    <div class="opacity-0 animate-fade-in-up animation-delay-{{ ($index + 1) * 100 }} glass-card p-6 flex flex-col items-center text-center hover-scale">
-                        <div class="mb-4">
-                            <i data-lucide="{{ $feature['icon'] }}" class="h-10 w-10 text-blue-600"></i>
-                        </div>
-                        <h3 class="text-xl font-medium mb-2">{{ $feature['title'] }}</h3>
-                        <p class="text-gray-600">{{ $feature['description'] }}</p>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    
-    <!-- Process Steps -->
-    <section class="py-16 md:py-24 px-4">
-        <div class="container mx-auto max-w-4xl">
-            <div class="opacity-0 animate-fade-in-up text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold">Comment ça marche</h2>
-                <p class="mt-4 text-gray-600 max-w-2xl mx-auto">
-                    Suivez ces étapes simples pour commencer votre stage
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {{-- Bloc 1 --}}
+            <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition duration-300">
+                <img src="{{ asset('images/procedure.jpeg') }}" alt="Procédure Simplifiée" class="mx-auto mb-4 w-24 h-24 object-cover rounded-full border">
+                <div class="flex justify-center mb-3 text-blue-500">
+                    <i data-lucide="file-check" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Procédure Simplifiée</h3>
+                <p class="text-gray-600 text-sm">
+                    Soumettez votre demande en quelques clics et suivez son statut directement depuis notre plateforme.
                 </p>
             </div>
-            
-            <div class="space-y-12">
-                <div class="opacity-0 animate-fade-in-up flex flex-col md:flex-row items-center gap-8">
-                    <div class="glass-card p-6 flex items-center justify-center w-20 h-20 rounded-full shrink-0">
-                        <span class="text-2xl font-bold">1</span>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-medium mb-2">Remplissez le formulaire de demande</h3>
-                        <p class="text-gray-600">
-                            Remplissez le formulaire de demande de stage avec vos informations personnelles et académiques.
-                        </p>
-                    </div>
+
+            {{-- Bloc 2 --}}
+            <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition duration-300">
+                <img src="{{ asset('images/suivis1.jpeg') }}" alt="Suivi en Temps Réel" class="mx-auto mb-4 w-24 h-24 object-cover rounded-full border">
+                <div class="flex justify-center mb-3 text-green-500">
+                    <i data-lucide="clock" class="w-6 h-6"></i>
                 </div>
-                
-                <div class="opacity-0 animate-fade-in-up animation-delay-100 flex flex-col md:flex-row items-center gap-8">
-                    <div class="glass-card p-6 flex items-center justify-center w-20 h-20 rounded-full shrink-0">
-                        <span class="text-2xl font-bold">2</span>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-medium mb-2">Recevez une confirmation par email</h3>
-                        <p class="text-gray-600">
-                            Après validation de votre demande, vous recevrez un email contenant un ID unique et un lien pour créer votre compte.
-                        </p>
-                    </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Suivi en Temps Réel</h3>
+                <p class="text-gray-600 text-sm">
+                    Accédez à votre espace personnel pour suivre l'avancement de vos tâches et respecter vos délais.
+                </p>
+            </div>
+
+            {{-- Bloc 3 --}}
+            <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition duration-300">
+                <img src="{{ asset('images/gestion.jpeg') }}" alt="Gestion des Rapports" class="mx-auto mb-4 w-24 h-24 object-cover rounded-full border">
+                <div class="flex justify-center mb-3 text-purple-500">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
                 </div>
-                
-                <div class="opacity-0 animate-fade-in-up animation-delay-200 flex flex-col md:flex-row items-center gap-8">
-                    <div class="glass-card p-6 flex items-center justify-center w-20 h-20 rounded-full shrink-0">
-                        <span class="text-2xl font-bold">3</span>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-medium mb-2">Créez votre compte stagiaire</h3>
-                        <p class="text-gray-600">
-                            Utilisez le lien et l'ID reçus pour créer votre compte sur la plateforme et accéder à votre espace personnel.
-                        </p>
-                    </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Gestion des Rapports</h3>
+                <p class="text-gray-600 text-sm">
+                    Soumettez vos rapports de stage et recevez les commentaires de vos encadreurs directement sur la plateforme.
+                </p>
+            </div>
+
+            {{-- Bloc 4 --}}
+            <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition duration-300">
+                <img src="{{ asset('images/attestation.jpeg') }}" alt="Attestation Automatisée" class="mx-auto mb-4 w-24 h-24 object-cover rounded-full border">
+                <div class="flex justify-center mb-3 text-yellow-500">
+                    <i data-lucide="trophy" class="w-6 h-6"></i>
                 </div>
-                
-                <div class="opacity-0 animate-fade-in-up animation-delay-300 flex flex-col md:flex-row items-center gap-8">
-                    <div class="glass-card p-6 flex items-center justify-center w-20 h-20 rounded-full shrink-0">
-                        <span class="text-2xl font-bold">4</span>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-medium mb-2">Gérez votre stage en ligne</h3>
-                        <p class="text-gray-600">
-                            Suivez vos tâches, soumettez vos rapports et recevez votre attestation directement sur la plateforme.
-                        </p>
-                    </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Attestation Automatisée</h3>
+                <p class="text-gray-600 text-sm">
+                    Recevez automatiquement votre attestation de stage une fois validée par votre encadreur.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+  <!-- Process Steps -->
+<section class="py-16 md:py-24 px-4">
+    <div class="container mx-auto max-w-4xl">
+        <div class="opacity-0 animate-fade-in-up text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold">Comment ça marche</h2>
+            <p class="mt-4 text-gray-600 max-w-2xl mx-auto">
+                Suivez ces étapes simples pour commencer votre stage
+            </p>
+        </div>
+
+        <div class="space-y-12">
+            {{-- Étape 1 --}}
+            <div class="opacity-0 animate-fade-in-up flex flex-col md:flex-row items-center gap-8">
+                <span class="text-2xl font-bold">1</span>
+                <img src="{{ asset('images/formulaire.jpeg') }}" alt="Formulaire" class="w-24 h-24 rounded-lg object-cover border shadow-md">
+                <div>
+                    <h3 class="text-xl font-medium mb-2">Remplissez le formulaire de demande</h3>
+                    <p class="text-gray-600">
+                        Remplissez le formulaire de demande de stage avec vos informations personnelles et académiques.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Étape 2 --}}
+            <div class="opacity-0 animate-fade-in-up animation-delay-100 flex flex-col md:flex-row items-center gap-8">
+                <span class="text-2xl font-bold">2</span>
+                <img src="{{ asset('images/mail.jpeg') }}" alt="Mail" class="w-24 h-24 rounded-lg object-cover border shadow-md">
+                <div>
+                    <h3 class="text-xl font-medium mb-2">Recevez une confirmation par email</h3>
+                    <p class="text-gray-600">
+                        Après validation de votre demande, vous recevrez un email contenant un ID unique et un lien pour créer votre compte.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Étape 3 --}}
+            <div class="opacity-0 animate-fade-in-up animation-delay-200 flex flex-col md:flex-row items-center gap-8">
+                <span class="text-2xl font-bold">3</span>
+                <img src="{{ asset('images/compte.jpeg') }}" alt="Compte Stagiaire" class="w-24 h-24 rounded-lg object-cover border shadow-md">
+                <div>
+                    <h3 class="text-xl font-medium mb-2">Créez votre compte stagiaire</h3>
+                    <p class="text-gray-600">
+                        Utilisez le lien et l'ID reçus pour créer votre compte sur la plateforme et accéder à votre espace personnel.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Étape 4 --}}
+            <div class="opacity-0 animate-fade-in-up animation-delay-300 flex flex-col md:flex-row items-center gap-8">
+                <span class="text-2xl font-bold">4</span>
+                <img src="{{ asset('images/stage_online.jpeg') }}" alt="Stage en ligne" class="w-24 h-24 rounded-lg object-cover border shadow-md">
+                <div>
+                    <h3 class="text-xl font-medium mb-2">Gérez votre stage en ligne</h3>
+                    <p class="text-gray-600">
+                        Suivez vos tâches, soumettez vos rapports et recevez votre attestation directement sur la plateforme.
+                    </p>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
+
     
     <!-- Application Form Section -->
     <section id="apply" class="py-16 md:py-24 bg-gray-100 px-4">
