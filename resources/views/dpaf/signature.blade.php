@@ -105,16 +105,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Gestion du rejet
-    rejectBtn.addEventListener('click', function() {
-        if (confirm('Confirmez-vous le rejet de cette demande ?')) {
-            const hiddenAction = document.createElement('input');
-            hiddenAction.type = 'hidden';
-            hiddenAction.name = 'action';
-            hiddenAction.value = 'reject';
-            form.appendChild(hiddenAction);
-            form.submit();
-        }
-    });
+rejectBtn.addEventListener('click', function() {
+    if (confirm('Confirmez-vous le rejet de cette demande ?')) {
+        // Créer un formulaire spécifique pour le rejet
+        const rejectForm = document.createElement('form');
+        rejectForm.method = 'POST';
+        rejectForm.action = "{{ route('dpaf.demandes.authorize', $demande->id) }}";
+        
+        // Ajouter le token CSRF
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = "{{ csrf_token() }}";
+        rejectForm.appendChild(csrfInput);
+        
+        // Ajouter l'action
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'reject';
+        rejectForm.appendChild(actionInput);
+        
+        // Soumettre le formulaire
+        document.body.appendChild(rejectForm);
+        rejectForm.submit();
+    }
+});
 });
 </script>
 @endsection

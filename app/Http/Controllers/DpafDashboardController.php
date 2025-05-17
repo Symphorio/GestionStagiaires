@@ -162,17 +162,19 @@ class DpafDashboardController extends Controller
                                ]);
                 
             } else {
-                $demande->update([
-                    'status' => 'rejected',
-                    'rejected_by' => auth('stagiaire')->id(),
-                    'rejected_at' => now()
-                ]);
+            // Code pour le rejet
+            $demande->update([
+                'status' => 'rejected',
+                'rejected_by' => auth('dpaf')->id(), // Changé de 'stagiaire' à 'dpaf'
+                'rejected_at' => now()
+            ]);
 
-                return redirect()->route('dpaf.authorize')->with('success', 'Demande refusée');
-            }
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erreur: '.$e->getMessage());
+            return redirect()->route('dpaf.authorize')
+                           ->with('success', 'Demande refusée avec succès');
         }
+    } catch (\Exception $e) {
+        return back()->with('error', 'Erreur: '.$e->getMessage());
+    }
     }
 
     public function destroy(DemandeStage $demande)
