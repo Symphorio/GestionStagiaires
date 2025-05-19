@@ -31,8 +31,8 @@
             </li>
             <li>
                 <a href="{{ route('stagiaire.attestations') }}" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.soumission-memoire') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">
-                    <i data-lucide="book-open" class="h-5 w-5"></i>
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('stagiaire.attestations') ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 hover:text-gray-900' }}">
+                    <i data-lucide="book-marked" class="h-5 w-5"></i>
                     <span>Attestation</span>
                 </a>
             </li>

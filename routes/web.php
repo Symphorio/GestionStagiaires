@@ -77,7 +77,7 @@ Route::middleware('guest')->group(function () {
         Route::post('/register', [SrhdsRegisterController::class, 'register'])->name('srhds.register.submit');
     });
 
-    // Supervisur
+    // Superviseur
     Route::prefix('superviseur')->group(function () {
         Route::get('/auth', [SuperviseurAuthController::class, 'index'])->name('superviseur.auth');
         Route::post('/login', [SuperviseurAuthController::class, 'login'])->name('superviseur.login.submit');
