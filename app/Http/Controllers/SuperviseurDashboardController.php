@@ -7,6 +7,7 @@ use App\Models\Stagiaire;
 use App\Models\Tache;
 use App\Models\Rapport;
 use App\Models\Memoire;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -15,141 +16,141 @@ use PDF;
 
 class SuperviseurDashboardController extends Controller
 {
-public function index()
-{
-    $superviseurId = auth()->guard('superviseur')->id();
+    public function index()
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
 
-    // Vérifier et mettre à jour les stagiaires dont le stage est terminé
-    $stagiairesAVerifier = Stagiaire::where('superviseur_id', $superviseurId)
-        ->where('statut', 'actif')
-        ->whereHas('demandeStage')
-        ->with('demandeStage')
-        ->get();
-
-    foreach ($stagiairesAVerifier as $stagiaire) {
-        $dateFin = Carbon::parse($stagiaire->demandeStage->date_fin);
-        if (now() >= $dateFin) {
-            $stagiaire->update(['statut' => 'terminé']);
-        }
-    }
-
-    // Statistiques
-    $stats = [
-        'stagiaires_count' => Stagiaire::where('superviseur_id', $superviseurId)
+        // Vérifier et mettre à jour les stagiaires dont le stage est terminé
+        $stagiairesAVerifier = Stagiaire::where('superviseur_id', $superviseurId)
             ->where('statut', 'actif')
-            ->count(),
-        'taches_count' => Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
-            $query->where('superviseur_id', $superviseurId)
-                  ->where('statut', 'actif');
-        })->where('status', '!=', 'terminé')->count(),
-        'rapports_pending_count' => Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
-            $query->where('superviseur_id', $superviseurId);
-        })->where('statut', 'en attente')->count(),
-        'memoires_pending_count' => Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
-            $query->where('superviseur_id', $superviseurId);
-        })->where('status', 'en attente')->count(),
-    ];
+            ->whereHas('demandeStage')
+            ->with('demandeStage')
+            ->get();
 
-    // Stagiaires actifs avec progression
-    $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-        ->where('statut', 'actif')
-        ->whereHas('demandeStage')
-        ->with('demandeStage')
-        ->get()
-        ->map(function($stagiaire) {
-            $now = now();
-            $start = Carbon::parse($stagiaire->demandeStage->date_debut);
-            $end = Carbon::parse($stagiaire->demandeStage->date_fin);
-            
-            $totalDays = $start->diffInDays($end);
-            $elapsedDays = $now->diffInDays($start);
-            
-            $stagiaire->progress = $totalDays > 0 
-                ? min(round(($elapsedDays / $totalDays) * 100), 100)
-                : 0;
+        foreach ($stagiairesAVerifier as $stagiaire) {
+            $dateFin = Carbon::parse($stagiaire->demandeStage->date_fin);
+            if (now() >= $dateFin) {
+                $stagiaire->update(['statut' => 'terminé']);
+            }
+        }
+
+        // Statistiques
+        $stats = [
+            'stagiaires_count' => Stagiaire::where('superviseur_id', $superviseurId)
+                ->where('statut', 'actif')
+                ->count(),
+            'taches_count' => Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
+                $query->where('superviseur_id', $superviseurId)
+                      ->where('statut', 'actif');
+            })->where('status', '!=', 'terminé')->count(),
+            'rapports_pending_count' => Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
+                $query->where('superviseur_id', $superviseurId);
+            })->where('statut', 'en attente')->count(),
+            'memoires_pending_count' => Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
+                $query->where('superviseur_id', $superviseurId);
+            })->where('status', 'en attente')->count(),
+        ];
+
+        // Stagiaires actifs avec progression
+        $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+            ->where('statut', 'actif')
+            ->whereHas('demandeStage')
+            ->with('demandeStage')
+            ->get()
+            ->map(function($stagiaire) {
+                $now = now();
+                $start = Carbon::parse($stagiaire->demandeStage->date_debut);
+                $end = Carbon::parse($stagiaire->demandeStage->date_fin);
                 
-            return $stagiaire;
-        });
+                $totalDays = $start->diffInDays($end);
+                $elapsedDays = $now->diffInDays($start);
+                
+                $stagiaire->progress = $totalDays > 0 
+                    ? min(round(($elapsedDays / $totalDays) * 100), 100)
+                    : 0;
+                    
+                return $stagiaire;
+            });
 
-    // Tâches récentes avec titre et stagiaire assigné
-    $taches = Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
-            $query->where('superviseur_id', $superviseurId);
-        })
-        ->with(['stagiaire' => function($query) {
-            $query->select('id', 'prenom', 'nom');
-        }])
-        ->select('id', 'title', 'status', 'deadline', 'stagiaire_id')
-        ->latest()
-        ->limit(5)
-        ->get();
+        // Tâches récentes avec titre et stagiaire assigné
+        $taches = Tache::whereHas('stagiaire', function($query) use ($superviseurId) {
+                $query->where('superviseur_id', $superviseurId);
+            })
+            ->with(['stagiaire' => function($query) {
+                $query->select('id', 'prenom', 'nom');
+            }])
+            ->select('id', 'title', 'status', 'deadline', 'stagiaire_id')
+            ->latest()
+            ->limit(5)
+            ->get();
 
-    return view('superviseur.dashboard', [
-        'stats' => $stats,
-        'stagiaires' => $stagiaires,
-        'taches' => $taches
-    ]);
-}
+        return view('superviseur.dashboard', [
+            'stats' => $stats,
+            'stagiaires' => $stagiaires,
+            'taches' => $taches
+        ]);
+    }
 
     public function stagiaires()
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    // Vérifier et mettre à jour le statut des stagiaires dont le stage est terminé
-    $stagiairesAVerifier = Stagiaire::where('superviseur_id', $superviseurId)
-        ->where('statut', 'actif')
-        ->whereHas('demandeStage')
-        ->with('demandeStage')
-        ->get();
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        // Vérifier et mettre à jour le statut des stagiaires dont le stage est terminé
+        $stagiairesAVerifier = Stagiaire::where('superviseur_id', $superviseurId)
+            ->where('statut', 'actif')
+            ->whereHas('demandeStage')
+            ->with('demandeStage')
+            ->get();
 
-    foreach ($stagiairesAVerifier as $stagiaire) {
-        $dateFin = Carbon::parse($stagiaire->demandeStage->date_fin);
-        if (now() >= $dateFin) {
-            $stagiaire->update(['statut' => 'terminé']);
+        foreach ($stagiairesAVerifier as $stagiaire) {
+            $dateFin = Carbon::parse($stagiaire->demandeStage->date_fin);
+            if (now() >= $dateFin) {
+                $stagiaire->update(['statut', 'terminé']);
+            }
         }
-    }
 
-    // Stagiaires actifs (en cours de stage)
-    $activeStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-        ->where('statut', 'actif')
-        ->whereHas('demandeStage')
-        ->with(['taches', 'demandeStage'])
-        ->get()
-        ->map(function($stagiaire) {
-            $now = now();
-            $start = Carbon::parse($stagiaire->demandeStage->date_debut);
-            $end = Carbon::parse($stagiaire->demandeStage->date_fin);
-            
-            $totalDays = $start->diffInDays($end);
-            $elapsedDays = $now->diffInDays($start);
-            
-            $stagiaire->progress = $totalDays > 0 
-                ? min(round(($elapsedDays / $totalDays) * 100), 100)
-                : 0;
+        // Stagiaires actifs (en cours de stage)
+        $activeStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+            ->where('statut', 'actif')
+            ->whereHas('demandeStage')
+            ->with(['taches', 'demandeStage'])
+            ->get()
+            ->map(function($stagiaire) {
+                $now = now();
+                $start = Carbon::parse($stagiaire->demandeStage->date_debut);
+                $end = Carbon::parse($stagiaire->demandeStage->date_fin);
                 
-            return $stagiaire;
-        });
+                $totalDays = $start->diffInDays($end);
+                $elapsedDays = $now->diffInDays($start);
+                
+                $stagiaire->progress = $totalDays > 0 
+                    ? min(round(($elapsedDays / $totalDays) * 100), 100)
+                    : 0;
+                    
+                return $stagiaire;
+            });
 
-    // Stagiaires terminés (date de fin atteinte)
-    $completedStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-        ->where('statut', 'terminé')
-        ->with(['taches', 'demandeStage'])
-        ->get()
-        ->map(function($stagiaire) {
-            $stagiaire->progress = 100; // Forcer à 100% pour les stages terminés
-            return $stagiaire;
-        });
+        // Stagiaires terminés (date de fin atteinte)
+        $completedStagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+            ->where('statut', 'terminé')
+            ->with(['taches', 'demandeStage'])
+            ->get()
+            ->map(function($stagiaire) {
+                $stagiaire->progress = 100; // Forcer à 100% pour les stages terminés
+                return $stagiaire;
+            });
 
-    // Stagiaires disponibles (non assignés)
-    $availableStagiaires = Stagiaire::whereNull('superviseur_id')
-        ->where('is_validated', true)
-        ->get();
-    
-    return view('superviseur.stagiaire', [
-        'activeStagiaires' => $activeStagiaires,
-        'completedStagiaires' => $completedStagiaires,
-        'availableStagiaires' => $availableStagiaires
-    ]);
-}
+        // Stagiaires disponibles (non assignés)
+        $availableStagiaires = Stagiaire::whereNull('superviseur_id')
+            ->where('is_validated', true)
+            ->get();
+        
+        return view('superviseur.stagiaire', [
+            'activeStagiaires' => $activeStagiaires,
+            'completedStagiaires' => $completedStagiaires,
+            'availableStagiaires' => $availableStagiaires
+        ]);
+    }
     
     public function search(Request $request)
     {
@@ -260,49 +261,46 @@ public function index()
             ->with('success', 'Stagiaire supprimé avec succès');
     }
 
-public function getArchives($id)
-{
-    $stagiaire = Stagiaire::with(['demandeStage', 'taches', 'rapports'])->findOrFail($id);
+    public function getArchives($id)
+    {
+        $stagiaire = Stagiaire::with(['demandeStage', 'taches', 'rapports'])->findOrFail($id);
 
-    return response()->json([
-        'prenom' => $stagiaire->prenom,
-        'nom' => $stagiaire->nom,
-        'date_debut' => $stagiaire->demandeStage->date_debut->format('d/m/Y'),
-        'date_fin' => $stagiaire->demandeStage->date_fin->format('d/m/Y'),
-        'duree' => $this->calculateDuration($stagiaire->demandeStage),
-        'departement' => $stagiaire->demandeStage->departement,
-        'taches_reussies' => $stagiaire->taches->where('statut', 'terminé')->count(),
-        'taches_echouees' => $stagiaire->taches->where('statut', '!=', 'terminé')->count(),
-        'taux_reussite' => $this->calculateSuccessRate($stagiaire),
-        'documents' => [
-            [
-                'nom' => 'Rapport de stage',
-                'soumis' => $stagiaire->rapports->isNotEmpty(),
-                'lien' => $stagiaire->rapports->isNotEmpty() 
-                    ? route('superviseur.rapports.download', $stagiaire->rapports->first()->id)
-                    : '#'
+        return response()->json([
+            'prenom' => $stagiaire->prenom,
+            'nom' => $stagiaire->nom,
+            'date_debut' => $stagiaire->demandeStage->date_debut->format('d/m/Y'),
+            'date_fin' => $stagiaire->demandeStage->date_fin->format('d/m/Y'),
+            'duree' => $this->calculateDuration($stagiaire->demandeStage),
+            'departement' => $stagiaire->demandeStage->departement,
+            'taches_reussies' => $stagiaire->taches->where('statut', 'terminé')->count(),
+            'taches_echouees' => $stagiaire->taches->where('statut', '!=', 'terminé')->count(),
+            'taux_reussite' => $this->calculateSuccessRate($stagiaire),
+            'documents' => [
+                [
+                    'nom' => 'Rapport de stage',
+                    'soumis' => $stagiaire->rapports->isNotEmpty(),
+                    'lien' => $stagiaire->rapports->isNotEmpty() 
+                        ? route('superviseur.rapports.download', $stagiaire->rapports->first()->id)
+                        : '#'
+                ]
             ]
-        ]
-    ]);
-}
+        ]);
+    }
 
-private function calculateDuration($demandeStage)
-{
-    $start = Carbon::parse($demandeStage->date_debut);
-    $end = Carbon::parse($demandeStage->date_fin);
-    return $start->diffInMonths($end) . ' mois';
-}
+    private function calculateDuration($demandeStage)
+    {
+        $start = Carbon::parse($demandeStage->date_debut);
+        $end = Carbon::parse($demandeStage->date_fin);
+        return $start->diffInMonths($end) . ' mois';
+    }
 
-private function calculateSuccessRate($stagiaire)
-{
-    $total = $stagiaire->taches->count();
-    $success = $stagiaire->taches->where('statut', 'terminé')->count();
-    return $total > 0 ? round(($success / $total) * 100) . '%' : '0%';
-}
+    private function calculateSuccessRate($stagiaire)
+    {
+        $total = $stagiaire->taches->count();
+        $success = $stagiaire->taches->where('statut', 'terminé')->count();
+        return $total > 0 ? round(($success / $total) * 100) . '%' : '0%';
+    }
 
-        /**
-     * Affiche la liste des tâches
-     */
     public function tasks()
     {
         $superviseurId = auth()->guard('superviseur')->id();
@@ -327,13 +325,10 @@ private function calculateSuccessRate($stagiaire)
         return view('superviseur.tasks', [
             'tasks' => $tasks,
             'stagiaires' => $stagiaires,
-            'allStagiairesSelected' => false // Nouvelle variable pour gérer la sélection globale
+            'allStagiairesSelected' => false
         ]);
     }
 
-    /**
-     * Stocke une nouvelle tâche
-     */
     public function storeTask(Request $request)
     {
         $request->validate([
@@ -362,7 +357,7 @@ private function calculateSuccessRate($stagiaire)
         }
     
         foreach ($stagiairesIds as $stagiaireId) {
-            Tache::create([
+            $task = Tache::create([
                 'title' => $request->title,
                 'description' => $request->description,
                 'status' => 'pending',
@@ -370,15 +365,25 @@ private function calculateSuccessRate($stagiaire)
                 'stagiaire_id' => $stagiaireId,
                 'assigned_by' => $superviseurId,
             ]);
+
+            // Créer une notification pour le stagiaire
+           // Exemple pour l'assignation de tâche
+Notification::create([
+    'user_id' => $stagiaireId, // Doit être l'ID du stagiaire
+    'type' => 'task',
+    'message' => 'Nouvelle tâche assignée: ' . $request->title,
+    'data' => json_encode([
+        'task_id' => $task->id,
+        'deadline' => $request->deadline
+    ]),
+    'is_read' => false // Important!
+]);
         }
     
         return redirect()->route('superviseur.tasks')
             ->with('success', 'Tâche(s) créée(s) avec succès');
     }
 
-    /**
-     * Met à jour le statut d'une tâche
-     */
     public function updateTaskStatus(Request $request, Tache $task)
     {
         $request->validate([
@@ -395,63 +400,52 @@ private function calculateSuccessRate($stagiaire)
         ]);
     }
 
-    /**
- * Affiche le formulaire de modification
- */
-public function editTask(Tache $task)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    // Vérification que la tâche appartient bien à un stagiaire du superviseur
-    if ($task->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
+    public function editTask(Tache $task)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($task->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
+            ->where('statut', 'actif')
+            ->get(['id', 'prenom', 'nom']);
+
+        return view('superviseur.edit-task', [
+            'task' => $task,
+            'stagiaires' => $stagiaires
+        ]);
     }
 
-    $stagiaires = Stagiaire::where('superviseur_id', $superviseurId)
-        ->where('statut', 'actif')
-        ->get(['id', 'prenom', 'nom']);
+    public function updateTask(Request $request, Tache $task)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($task->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
 
-    return view('superviseur.edit-task', [
-        'task' => $task,
-        'stagiaires' => $stagiaires
-    ]);
-}
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'stagiaire_id' => 'required|exists:stagiaires,id',
+            'deadline' => 'required|date',
+            'status' => 'required|in:pending,in_progress,completed'
+        ]);
 
-/**
- * Met à jour la tâche
- */
-public function updateTask(Request $request, Tache $task)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    // Vérification d'accès
-    if ($task->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
+        $task->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'stagiaire_id' => $request->stagiaire_id,
+            'deadline' => $request->deadline,
+            'status' => $request->status
+        ]);
+
+        return redirect()->route('superviseur.tasks')
+            ->with('success', 'Tâche mise à jour avec succès');
     }
 
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'required|string',
-        'stagiaire_id' => 'required|exists:stagiaires,id',
-        'deadline' => 'required|date',
-        'status' => 'required|in:pending,in_progress,completed'
-    ]);
-
-    $task->update([
-        'title' => $request->title,
-        'description' => $request->description,
-        'stagiaire_id' => $request->stagiaire_id,
-        'deadline' => $request->deadline,
-        'status' => $request->status
-    ]);
-
-    return redirect()->route('superviseur.tasks')
-        ->with('success', 'Tâche mise à jour avec succès');
-}
-
-    /**
-     * Supprime une tâche
-     */
     public function destroyTask(Tache $task)
     {
         $task->delete();
@@ -460,9 +454,6 @@ public function updateTask(Request $request, Tache $task)
             ->with('success', 'Tâche supprimée avec succès');
     }
 
-    /**
-     * Retourne la classe CSS pour le badge de statut
-     */
     private function getStatusBadgeClass($status)
     {
         switch ($status) {
@@ -477,9 +468,6 @@ public function updateTask(Request $request, Tache $task)
         }
     }
 
-    /**
-     * Retourne le libellé du statut
-     */
     private function getStatusLabel($status)
     {
         switch ($status) {
@@ -494,408 +482,373 @@ public function updateTask(Request $request, Tache $task)
         }
     }
 
+    public function rapports()
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        $rapports = Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
+                $query->where('superviseur_id', $superviseurId);
+            })
+            ->with('stagiaire')
+            ->latest()
+            ->get()
+            ->map(function($rapport) {
+                $rapport->status_badge = $this->getRapportStatusBadge($rapport->statut);
+                return $rapport;
+            });
 
-    /**
- * Affiche la liste des rapports
- */
-public function rapports()
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    $rapports = Rapport::whereHas('stagiaire', function($query) use ($superviseurId) {
-            $query->where('superviseur_id', $superviseurId);
-        })
-        ->with('stagiaire')
-        ->latest()
-        ->get()
-        ->map(function($rapport) {
-            $rapport->status_badge = $this->getRapportStatusBadge($rapport->statut);
-            return $rapport;
-        });
-
-    return view('superviseur.rapports', compact('rapports'));
-}
-
-/**
- * Affiche un rapport spécifique
- */
-public function showRapport(Rapport $rapport)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
+        return view('superviseur.rapports', compact('rapports'));
     }
 
-    // Vérifier si le fichier existe dans public/rapports
-    if ($rapport->file_path && Storage::exists('public/rapports/'.basename($rapport->file_path))) {
-        $rapport->download_url = route('superviseur.rapports.download', $rapport->id);
-    } else {
-        $rapport->download_url = null;
+    public function showRapport(Rapport $rapport)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        if ($rapport->file_path && Storage::exists('public/rapports/'.basename($rapport->file_path))) {
+            $rapport->download_url = route('superviseur.rapports.download', $rapport->id);
+        } else {
+            $rapport->download_url = null;
+        }
+
+        return view('superviseur.rapport-show', compact('rapport'));
     }
 
-    return view('superviseur.rapport-show', compact('rapport'));
-}
+    public function downloadRapport(Rapport $rapport)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
 
-public function downloadRapport(Rapport $rapport)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
+        if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
 
-    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
+        $filename = basename($rapport->file_path);
+        $storagePath = 'public/rapports/'.$filename;
+
+        if (empty($filename)) {
+            abort(404, "Aucun fichier associé à ce rapport");
+        }
+
+        if (!Storage::exists($storagePath)) {
+            abort(404, "Le fichier '$filename' n'existe pas dans storage/app/public/rapports/");
+        }
+
+        return Storage::download($storagePath, $rapport->original_name ?? $filename);
     }
 
-    $filename = basename($rapport->file_path);
-    $storagePath = 'public/rapports/'.$filename;
+    public function approveRapport(Request $request, Rapport $rapport)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        $superviseur = auth()->guard('superviseur')->user();
 
-    if (empty($filename)) {
-        abort(404, "Aucun fichier associé à ce rapport");
+        if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        $existingAttestation = Attestation::where('rapport_id', $rapport->id)->first();
+
+        if ($existingAttestation) {
+            return redirect()->route('superviseur.rapports.edit-attestation', $existingAttestation)
+                ->with('info', 'Une attestation existe déjà pour ce rapport. Vous pouvez la modifier.');
+        }
+
+        $attestation = Attestation::create([
+            'rapport_id' => $rapport->id,
+            'superviseur_id' => $superviseurId,
+            'superviseur_name' => $superviseur->prenom . ' ' . $superviseur->nom,
+            'company_name' => $rapport->stagiaire->entreprise->nom ?? 'Nom de l\'entreprise',
+            'company_address' => $rapport->stagiaire->entreprise->adresse ?? 'Adresse de l\'entreprise',
+            'activities' => json_encode(['Activité 1', 'Activité 2']),
+            'statut' => 'en cours',
+            'date_generation' => now(),
+        ]);
+
+        $rapport->update(['statut' => 'approuvé']);
+
+        return redirect()->route('superviseur.rapports.edit-attestation', $attestation)
+            ->with('success', 'Rapport approuvé. Veuillez compléter les détails de l\'attestation.');
     }
 
-    if (!Storage::exists($storagePath)) {
-        abort(404, "Le fichier '$filename' n'existe pas dans storage/app/public/rapports/");
-    }
-
-    return Storage::download($storagePath, $rapport->original_name ?? $filename);
-}
-
-
-/**
- * Approuve un rapport
- */
-public function approveRapport(Request $request, Rapport $rapport)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    $superviseur = auth()->guard('superviseur')->user();
-
-    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
-    }
-
-    // Vérifier si une attestation existe déjà pour ce rapport
-    $existingAttestation = Attestation::where('rapport_id', $rapport->id)->first();
-
-    if ($existingAttestation) {
-        // Si une attestation existe déjà, rediriger vers l'édition
-        return redirect()->route('superviseur.rapports.edit-attestation', $existingAttestation)
-            ->with('info', 'Une attestation existe déjà pour ce rapport. Vous pouvez la modifier.');
-    }
-
-    // Créer une nouvelle attestation avec des valeurs par défaut plus complètes
-    $attestation = Attestation::create([
-        'rapport_id' => $rapport->id,
-        'superviseur_id' => $superviseurId,
-        'superviseur_name' => $superviseur->prenom . ' ' . $superviseur->nom,
-        'company_name' => $rapport->stagiaire->entreprise->nom ?? 'Nom de l\'entreprise',
-        'company_address' => $rapport->stagiaire->entreprise->adresse ?? 'Adresse de l\'entreprise',
-        'activities' => json_encode(['Activité 1', 'Activité 2']), // Valeurs par défaut
-        'statut' => 'en cours',
-        'date_generation' => now(),
-    ]);
-
-    // Mettre à jour le statut du rapport
-    $rapport->update(['statut' => 'approuvé']);
-
-    return redirect()->route('superviseur.rapports.edit-attestation', $attestation)
-        ->with('success', 'Rapport approuvé. Veuillez compléter les détails de l\'attestation.');
-}
-
-/**
- * Rejette un rapport
- */
-public function rejectRapport(Request $request, Rapport $rapport)
-{
-    $request->validate([
-        'feedback' => 'required|string|max:500',
-    ]);
-
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
-    }
-
-    $rapport->update([
-        'statut' => 'rejeté',
-        'feedback' => $request->feedback,
-    ]);
-
-    return redirect()->route('superviseur.rapports.show', $rapport)
-        ->with('success', 'Rapport rejeté avec succès.');
-}
-
-
-/**
- * Affiche le formulaire d'édition d'attestation
- */
-public function editAttestation(Attestation $attestation)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($attestation->superviseur_id !== $superviseurId) {
-        abort(403, "Vous n'êtes pas autorisé à modifier cette attestation");
-    }
-
-    // Charger les relations nécessaires
-    $attestation->load(['rapport.stagiaire']);
-
-    return view('superviseur.attestation-edit', compact('attestation'));
-}
-
-/**
- * Met à jour une attestation
- */
-public function updateAttestation(Request $request, Attestation $attestation)
-{
-    $request->validate([
-        'superviseur_name' => 'required|string|max:255',
-        'company_name' => 'required|string|max:255',
-        'company_address' => 'required|string',
-        'activities' => 'required|string', // Modifié car vous utilisez un textarea
-    ]);
-
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($attestation->superviseur_id !== $superviseurId) {
-        abort(403);
-    }
-
-    // Convertir le texte des activités en tableau
-    $activitiesArray = explode("\n", $request->activities);
-    $activitiesArray = array_map('trim', $activitiesArray);
-    $activitiesArray = array_filter($activitiesArray); // Supprime les lignes vides
-
-    $attestation->update([
-        'superviseur_name' => $request->superviseur_name,
-        'company_name' => $request->company_name,
-        'company_address' => $request->company_address,
-        'activities' => json_encode($activitiesArray),
-        'statut' => 'complété',
-    ]);
-
-    return redirect()->route('superviseur.rapports.show-attestation', $attestation)
-        ->with('success', 'Attestation mise à jour avec succès.');
-}
-
-/**
- * Affiche une attestation
- */
-public function showAttestation(Attestation $attestation)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($attestation->superviseur_id !== $superviseurId) {
-        abort(403);
-    }
-
-    return view('superviseur.attestation-show', compact('attestation'));
-}
-
-/**
- * Envoie une attestation au stagiaire
- */
-public function sendAttestation(Attestation $attestation)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($attestation->superviseur_id !== $superviseurId) {
-        abort(403);
-    }
-
-    // Générer le PDF
-    $pdf = $this->generateAttestationPdf($attestation);
-    
-    // Chemin de stockage
-    $filename = 'attestation-'.$attestation->id.'.pdf';
-    $path = 'attestations/'.$filename;
-    
-    // Stocker dans storage/app/public/attestations
-    Storage::put('public/'.$path, $pdf->output());
-    
-    // Mettre à jour l'attestation
-    $attestation->update([
-        'file_path' => 'public/'.$path,
-        'date_envoi' => now(),
-        'statut' => Attestation::STATUS_SENT
-    ]);
-
-    return redirect()
-        ->route('superviseur.rapports.show-attestation', $attestation)
-        ->with('success', 'Attestation envoyée au stagiaire.');
-}
-
-private function generateAttestationPdf(Attestation $attestation)
-{
-    $activities = $attestation->activities;
-    
-    if (is_string($activities)) {
-        $activities = json_decode($activities, true) ?? [];
-    }
-    
-    $pdf = app('dompdf.wrapper')->loadView('pdf.attestation', [
-        'attestation' => $attestation,
-        'activities' => is_array($activities) ? $activities : []
-    ]);
-    
-    return $pdf;
-}
-
-/**
- * Gère la signature de l'attestation
- */
-public function signAttestation(Request $request, Attestation $attestation)
-{
-    try {
+    public function rejectRapport(Request $request, Rapport $rapport)
+    {
         $request->validate([
-            'signature' => 'required|string',
+            'feedback' => 'required|string|max:500',
+        ]);
+
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($rapport->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        $rapport->update([
+            'statut' => 'rejeté',
+            'feedback' => $request->feedback,
+        ]);
+
+        return redirect()->route('superviseur.rapports.show', $rapport)
+            ->with('success', 'Rapport rejeté avec succès.');
+    }
+
+    public function editAttestation(Attestation $attestation)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($attestation->superviseur_id !== $superviseurId) {
+            abort(403, "Vous n'êtes pas autorisé à modifier cette attestation");
+        }
+
+        $attestation->load(['rapport.stagiaire']);
+
+        return view('superviseur.attestation-edit', compact('attestation'));
+    }
+
+    public function updateAttestation(Request $request, Attestation $attestation)
+    {
+        $request->validate([
+            'superviseur_name' => 'required|string|max:255',
+            'company_name' => 'required|string|max:255',
+            'company_address' => 'required|string',
+            'activities' => 'required|string',
         ]);
 
         $superviseurId = auth()->guard('superviseur')->id();
         
         if ($attestation->superviseur_id !== $superviseurId) {
-            throw new \Exception('Action non autorisée');
+            abort(403);
         }
 
-        $signatureData = $request->signature;
-        if (!preg_match('/^data:image\/png;base64,/', $signatureData)) {
-            throw new \Exception('Format de signature invalide');
-        }
+        $activitiesArray = explode("\n", $request->activities);
+        $activitiesArray = array_map('trim', $activitiesArray);
+        $activitiesArray = array_filter($activitiesArray);
 
-        // Sauvegarder la signature
-        $signaturePath = 'signatures/'.uniqid().'.png';
-        $imageData = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $signatureData));
-        
-        Storage::disk('public')->put($signaturePath, $imageData);
-
-        // Mettre à jour l'attestation
         $attestation->update([
-            'signature_path' => $signaturePath,
-            'date_signature' => now(),
-            'statut' => Attestation::STATUS_SIGNED
+            'superviseur_name' => $request->superviseur_name,
+            'company_name' => $request->company_name,
+            'company_address' => $request->company_address,
+            'activities' => json_encode($activitiesArray),
+            'statut' => 'complété',
         ]);
 
-        return response()->json([
-            'success' => true,
-            'redirect_url' => route('superviseur.rapports.edit-attestation', $attestation),
-            'message' => 'Signature enregistrée avec succès'
+        return redirect()->route('superviseur.rapports.show-attestation', $attestation)
+            ->with('success', 'Attestation mise à jour avec succès.');
+    }
+
+    public function showAttestation(Attestation $attestation)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($attestation->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        return view('superviseur.attestation-show', compact('attestation'));
+    }
+
+    public function sendAttestation(Attestation $attestation)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($attestation->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        $pdf = $this->generateAttestationPdf($attestation);
+        
+        $filename = 'attestation-'.$attestation->id.'.pdf';
+        $path = 'attestations/'.$filename;
+        
+        Storage::put('public/'.$path, $pdf->output());
+        
+        $attestation->update([
+            'file_path' => 'public/'.$path,
+            'date_envoi' => now(),
+            'statut' => Attestation::STATUS_SENT
         ]);
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
-    }
-}
+        // Créer une notification pour le stagiaire
+        Notification::create([
+            'user_id' => $attestation->rapport->stagiaire_id,
+            'type' => 'attestation',
+            'message' => 'Votre attestation de stage est disponible',
+            'data' => [
+                'attestation_id' => $attestation->id
+            ]
+        ]);
 
-public function showSignature(Attestation $attestation)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($attestation->superviseur_id !== $superviseurId) {
-        abort(403);
-    }
-
-    return view('superviseur.signature', compact('attestation'));
-}
-
-private function saveSignature($base64Image)
-{
-    $image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
-    $image = str_replace(' ', '+', $image);
-    $imageName = 'signatures/signature-'.time().'.png';
-    
-    Storage::disk('public')->put($imageName, base64_decode($image));
-    
-    return $imageName;
-}
-
-/**
- * Retourne le badge HTML pour le statut du rapport
- */
-private function getRapportStatusBadge($status)
-{
-    switch ($status) {
-        case 'en attente':
-            return '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>';
-        case 'approuvé':
-            return '<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Approuvé</span>';
-        case 'rejeté':
-            return '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Rejeté</span>';
-        default:
-            return '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Inconnu</span>';
-    }
-}
-
-/**
- * Affiche la liste des mémoires
- */
-public function memoires()
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    $memoires = Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
-            $query->where('superviseur_id', $superviseurId);
-        })
-        ->with('stagiaire')
-        ->latest()
-        ->get();
-
-    return view('superviseur.memoires', compact('memoires'));
-}
-
-/**
- * Traite les actions sur les mémoires
- */
-/**
- * Traite les actions sur les mémoires
- */
-public function memoireAction(Request $request, Memoire $memoire)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($memoire->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
+        return redirect()
+            ->route('superviseur.rapports.show-attestation', $attestation)
+            ->with('success', 'Attestation envoyée au stagiaire.');
     }
 
-    $request->validate([
-        'action' => 'required|in:approved,rejected,revision',
-        'feedback' => 'required_if:action,rejected,revision'
-    ]);
-
-    // Mise à jour du statut et du feedback
-    $memoire->update([
-        'status' => $request->action,
-        'feedback' => $request->feedback,
-        'review_requested_at' => ($request->action === 'revision') ? now() : null
-    ]);
-
-    $message = match($request->action) {
-        'approved' => 'Le mémoire a été approuvé avec succès',
-        'rejected' => 'Le mémoire a été rejeté avec le feedback fourni',
-        'revision' => 'Une demande de révision a été envoyée au stagiaire'
-    };
-
-    return redirect()->route('superviseur.memoires')
-        ->with('success', $message);
-}
-
-/**
- * Télécharge un mémoire
- */
-public function downloadMemoire(Memoire $memoire)
-{
-    $superviseurId = auth()->guard('superviseur')->id();
-    
-    if ($memoire->stagiaire->superviseur_id !== $superviseurId) {
-        abort(403);
+    private function generateAttestationPdf(Attestation $attestation)
+    {
+        $activities = $attestation->activities;
+        
+        if (is_string($activities)) {
+            $activities = json_decode($activities, true) ?? [];
+        }
+        
+        $pdf = app('dompdf.wrapper')->loadView('pdf.attestation', [
+            'attestation' => $attestation,
+            'activities' => is_array($activities) ? $activities : []
+        ]);
+        
+        return $pdf;
     }
 
-    if (!Storage::exists($memoire->file_path)) {
-        abort(404);
+    public function signAttestation(Request $request, Attestation $attestation)
+    {
+        try {
+            $request->validate([
+                'signature' => 'required|string',
+            ]);
+
+            $superviseurId = auth()->guard('superviseur')->id();
+            
+            if ($attestation->superviseur_id !== $superviseurId) {
+                throw new \Exception('Action non autorisée');
+            }
+
+            $signatureData = $request->signature;
+            if (!preg_match('/^data:image\/png;base64,/', $signatureData)) {
+                throw new \Exception('Format de signature invalide');
+            }
+
+            $signaturePath = 'signatures/'.uniqid().'.png';
+            $imageData = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $signatureData));
+            
+            Storage::disk('public')->put($signaturePath, $imageData);
+
+            $attestation->update([
+                'signature_path' => $signaturePath,
+                'date_signature' => now(),
+                'statut' => Attestation::STATUS_SIGNED
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'redirect_url' => route('superviseur.rapports.edit-attestation', $attestation),
+                'message' => 'Signature enregistrée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    return Storage::download($memoire->file_path);
-}
+    public function showSignature(Attestation $attestation)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($attestation->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
 
+        return view('superviseur.signature', compact('attestation'));
+    }
+
+    private function saveSignature($base64Image)
+    {
+        $image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
+        $image = str_replace(' ', '+', $image);
+        $imageName = 'signatures/signature-'.time().'.png';
+        
+        Storage::disk('public')->put($imageName, base64_decode($image));
+        
+        return $imageName;
+    }
+
+    private function getRapportStatusBadge($status)
+    {
+        switch ($status) {
+            case 'en attente':
+                return '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>';
+            case 'approuvé':
+                return '<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Approuvé</span>';
+            case 'rejeté':
+                return '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Rejeté</span>';
+            default:
+                return '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Inconnu</span>';
+        }
+    }
+
+    public function memoires()
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        $memoires = Memoire::whereHas('stagiaire', function($query) use ($superviseurId) {
+                $query->where('superviseur_id', $superviseurId);
+            })
+            ->with('stagiaire')
+            ->latest()
+            ->get();
+
+        return view('superviseur.memoires', compact('memoires'));
+    }
+
+    public function memoireAction(Request $request, Memoire $memoire)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($memoire->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        $request->validate([
+            'action' => 'required|in:approved,rejected,revision',
+            'feedback' => 'required_if:action,rejected,revision'
+        ]);
+
+        $memoire->update([
+            'status' => $request->action,
+            'feedback' => $request->feedback,
+            'review_requested_at' => ($request->action === 'revision') ? now() : null
+        ]);
+
+        // Créer une notification pour le stagiaire
+        Notification::create([
+            'user_id' => $memoire->stagiaire_id,
+            'type' => 'memory',
+            'message' => $request->action === 'approved' 
+                ? 'Votre mémoire a été approuvé' 
+                : ($request->action === 'rejected' 
+                    ? 'Votre mémoire a été rejeté' 
+                    : 'Révision demandée pour votre mémoire'),
+            'data' => [
+                'memory_id' => $memoire->id,
+                'feedback' => $request->feedback ?? null
+            ]
+        ]);
+
+        $message = match($request->action) {
+            'approved' => 'Le mémoire a été approuvé avec succès',
+            'rejected' => 'Le mémoire a été rejeté avec le feedback fourni',
+            'revision' => 'Une demande de révision a été envoyée au stagiaire'
+        };
+
+        return redirect()->route('superviseur.memoires')
+            ->with('success', $message);
+    }
+
+    public function downloadMemoire(Memoire $memoire)
+    {
+        $superviseurId = auth()->guard('superviseur')->id();
+        
+        if ($memoire->stagiaire->superviseur_id !== $superviseurId) {
+            abort(403);
+        }
+
+        if (!Storage::exists($memoire->file_path)) {
+            abort(404);
+        }
+
+        return Storage::download($memoire->file_path);
+    }
 }

@@ -9,14 +9,15 @@
     <title>MASM - Tableau de Bord Stagiaire</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-    // Appliquer le mode sombre au chargement
-    if (localStorage.getItem('dark-mode') === 'true') {
-        document.documentElement.classList.add('dark');
-    } else if (!localStorage.getItem('dark-mode') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-    }
-</script>
+        // Appliquer le mode sombre au chargement
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        } else if (!localStorage.getItem('dark-mode') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
     <style>
         .dashboard-header {
             font-size: 1.5rem;
@@ -35,14 +36,16 @@
             color: #3b82f6;
         }
         .bell-ring {
-            animation: ring 0.5s ease-in-out infinite;
-            transform-origin: 50% 0;
+            animation: ring 1.5s ease infinite;
+            transform-origin: 50% 4px;
         }
         @keyframes ring {
             0% { transform: rotate(0); }
-            25% { transform: rotate(15deg); }
-            50% { transform: rotate(-15deg); }
-            75% { transform: rotate(10deg); }
+            10% { transform: rotate(-15deg); }
+            20% { transform: rotate(15deg); }
+            30% { transform: rotate(-10deg); }
+            40% { transform: rotate(10deg); }
+            50% { transform: rotate(0); }
             100% { transform: rotate(0); }
         }
         .notification-badge {
@@ -60,8 +63,6 @@
             font-size: 10px;
             font-weight: bold;
         }
-
-        /* Solution pour le flou sous la navbar */
         .main-container {
             display: flex;
             height: 100vh;
@@ -78,11 +79,11 @@
             z-index: 30;
             background: white;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            height: 80px; /* Ajustez selon votre header */
+            height: 80px;
         }
         .blur-overlay {
             position: sticky;
-            top: 80px; /* Doit correspondre à la hauteur du header */
+            top: 80px;
             height: 20px;
             background: linear-gradient(to bottom, 
                                       rgba(255,255,255,0.9) 0%, 
@@ -92,21 +93,26 @@
             z-index: 20;
             pointer-events: none;
         }
+        .notification-item {
+            transition: all 0.2s ease;
+        }
+        .notification-item:hover {
+            background-color: #f9fafb;
+        }
+        .notification-unread {
+            background-color: #f0f9ff;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-50" 
       x-data="{ 
           mobileMenuOpen: false, 
           notificationsOpen: false, 
-          userMenuOpen: false, 
-          hasNotifications: false, 
-          notificationCount: 0,
-          newNotifications: false,
-          lastChecked: null
+          userMenuOpen: false
       }"
       x-init="
-          checkNotifications();
-          setInterval(() => checkNotifications(), 60000);
+          Alpine.store('data').refreshNotifications();
+          setInterval(() => Alpine.store('data').refreshNotifications(), 60000);
       ">
 
     <!-- En-tête mobile -->
@@ -159,7 +165,7 @@
         
         <!-- Contenu Principal -->
         <div class="content-wrapper">
-            <!-- En-tête Bureau - Fixe en haut -->
+            <!-- En-tête Bureau -->
             <header class="nav-header hidden md:flex items-center justify-between p-6 border-b border-gray-200">
                 <h1 class="dashboard-header">
                     @yield('titre', 'TABLEAU DE BORD')
@@ -168,26 +174,63 @@
                 <div class="flex items-center space-x-6">
                     <!-- Bouton Notifications -->
                     <div class="relative">
-                        <button @click="notificationsOpen = !notificationsOpen; newNotifications = false; markNotificationsAsRead();" 
+                        <button @click="notificationsOpen = !notificationsOpen; Alpine.store('data').markAsRead();" 
                                 class="p-2 text-gray-600 hover:text-blue-500 relative">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
-                                 class="bell-icon" :class="{ 'bell-ring': hasNotifications && newNotifications }">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            </svg>
-                            <template x-if="notificationCount > 0">
-                                <span class="notification-badge" x-text="notificationCount"></span>
+                            <img src="/images/icons/bell.png" class="h-6 w-6" :class="{ 'bell-ring': Alpine.store('data').newNotifications }">
+                            <template x-if="Alpine.store('data').notificationCount > 0">
+                                <span class="notification-badge" x-text="Alpine.store('data').notificationCount"></span>
                             </template>
                         </button>
                         
                         <!-- Dropdown Notifications -->
                         <div x-show="notificationsOpen" @click.away="notificationsOpen = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
                              class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg z-50 border border-gray-200">
-                            <!-- Contenu des notifications -->
+                            <div class="p-4 border-b border-gray-200">
+                                <h3 class="text-sm font-medium">Notifications</h3>
+                            </div>
+                            <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                                <template x-for="notification in Alpine.store('data').notifications" :key="notification.id">
+                                    <div class="p-3 hover:bg-gray-50 notification-item" :class="{ 'notification-unread': !notification.is_read }">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0 pt-0.5">
+                                                <template x-if="notification.type === 'task'">
+                                                    <i data-lucide="list-checks" class="h-5 w-5 text-blue-500"></i>
+                                                </template>
+                                                <template x-if="notification.type === 'memory'">
+                                                    <i data-lucide="book-open" class="h-5 w-5 text-purple-500"></i>
+                                                </template>
+                                                <template x-if="notification.type === 'attestation'">
+                                                    <i data-lucide="book-marked" class="h-5 w-5 text-green-500"></i>
+                                                </template>
+                                            </div>
+                                            <div class="ml-3 flex-1">
+                                                <p x-text="notification.message" class="text-sm text-gray-700"></p>
+                                                <p class="text-xs text-gray-500 mt-1" x-text="new Date(notification.created_at).toLocaleString()"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="Alpine.store('data').notifications.length === 0">
+                                    <div class="p-4 text-center text-sm text-gray-500">
+                                        Aucune nouvelle notification
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="p-2 border-t border-gray-200 text-center">
+                                <a href="#" class="text-xs text-blue-500 hover:text-blue-700">
+                                    Voir toutes les notifications
+                                </a>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Menu Utilisateur - MODIFIÉ POUR AFFICHER LE NOM COMPLET -->
+                    <!-- Menu Utilisateur -->
                     <div class="relative">
                         <button @click="userMenuOpen = !userMenuOpen" 
                                 class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
@@ -250,26 +293,6 @@
             bellSound.play().catch(e => console.log("La lecture automatique a été bloquée:", e));
         }
 
-        // Fonction pour vérifier les nouvelles notifications
-        function checkNotifications() {
-            fetch('/api/check-notifications')
-                .then(response => response.json())
-                .then(data => {
-                    // Gestion des notifications
-                });
-        }
-
-        // Fonction pour marquer les notifications comme lues
-        function markNotificationsAsRead() {
-            fetch('/api/mark-notifications-read', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            });
-        }
-
         // Initialisation Alpine.js
         document.addEventListener('alpine:init', () => {
             Alpine.store('data', {
@@ -277,8 +300,53 @@
                 notificationCount: 0,
                 newNotifications: false,
                 lastChecked: null,
-                notifications: []
+                notifications: [],
+                
+               // Dans la fonction refreshNotifications() du store Alpine:
+refreshNotifications() {
+    console.log("Checking for new notifications...");
+    fetch('/api/check-notifications')
+        .then(response => {
+            console.log("API Response status:", response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Notifications data:", data);
+            this.notificationCount = data.count;
+            this.notifications = data.notifications;
+            this.hasNotifications = data.count > 0;
+            this.newNotifications = data.hasNew;
+            this.lastChecked = data.lastChecked;
+            
+            if (data.hasNew && !document.hidden) {
+                console.log("New notification detected!");
+                playBellSound();
+            }
+        })
+        .catch(error => console.error("Notification error:", error));
+},
+                
+                markAsRead() {
+                    if (this.notificationCount > 0) {
+                        fetch('/api/mark-notifications-read', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
+                        }).then(() => {
+                            this.newNotifications = false;
+                            this.notificationCount = 0;
+                            this.notifications.forEach(n => n.is_read = true);
+                        });
+                    }
+                }
             });
+        });
+
+        // Initialiser les icônes Lucide
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
         });
     </script>
 </body>

@@ -2,39 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    public function check()
-    {
-        $user = Auth::user();
-        $unread = $user->unreadNotifications()->count();
-        $lastNotification = $user->notifications()->latest()->first();
-        
-        return response()->json([
-            'newNotifications' => $unread,
-            'lastNotification' => $lastNotification ? $lastNotification->created_at->toISOString() : null,
-            'notifications' => $user->notifications()
-                                  ->orderBy('created_at', 'desc')
-                                  ->limit(10)
-                                  ->get()
-                                  ->map(function($notification) {
-                                      return [
-                                          'id' => $notification->id,
-                                          'message' => $notification->data['message'] ?? 'Nouvelle notification',
-                                          'url' => $notification->data['url'] ?? '#',
-                                          'time' => $notification->created_at->diffForHumans()
-                                      ];
-                                  })
-        ]);
-    }
+    
+public function check()
+{
+    $user = auth('stagiaire')->user();
+    
+    // Récupère les 10 dernières notifications (lus + non lus)
+    $notifications = Notification::where('user_id', $user->id)
+        ->orderBy('created_at', 'desc')
+        ->limit(10)
+        ->get();
 
-    public function markAsRead()
+    // Compte seulement les non lus
+    $unreadCount = Notification::where('user_id', $user->id)
+        ->where('is_read', false)
+        ->count();
+
+    return response()->json([
+        'count' => $unreadCount,
+        'notifications' => $notifications,
+        'hasNew' => $unreadCount > 0,
+        'lastChecked' => now()->toDateTimeString()
+    ]);
+}
+    
+    public function markAsRead(Request $request)
     {
-        Auth::user()->unreadNotifications->markAsRead();
-        
+        $user = auth('stagiaire')->user();
+        Notification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+            
         return response()->json(['success' => true]);
     }
 }

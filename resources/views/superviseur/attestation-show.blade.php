@@ -15,7 +15,7 @@
         </div>
         
         <div class="text-right mb-6">
-            <p>Paris, le {{ now()->format('d/m/Y') }}</p>
+            <p>Cotonou, le {{ now()->format('d/m/Y') }}</p>
         </div>
         
         <div class="mb-8">
