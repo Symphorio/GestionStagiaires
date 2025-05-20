@@ -134,10 +134,18 @@
                                             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                         >
                                             <option value="">Sélectionnez un département</option>
-                                            <option value="Direction Juridique" {{ old('department', $profil['department'] ?? '') == 'Direction Juridique' ? 'selected' : '' }}>Direction Juridique</option>
-                                            <option value="Direction Financière" {{ old('department', $profil['department'] ?? '') == 'Direction Financière' ? 'selected' : '' }}>Direction Financière</option>
-                                            <option value="Ressources Humaines" {{ old('department', $profil['department'] ?? '') == 'Ressources Humaines' ? 'selected' : '' }}>Ressources Humaines</option>
-                                            <option value="Informatique" {{ old('department', $profil['department'] ?? '') == 'Informatique' ? 'selected' : '' }}>Informatique</option>
+                                            <option value="DSI" {{ old('department', $profil['department'] ?? '') == 'DSI' ? 'selected' : '' }}>DSI</option>
+                                            <option value="DPAF" {{ old('department', $profil['department'] ?? '') == 'DPAF' ? 'selected' : '' }}>DPAF</option>
+                                            <option value="DGM" {{ old('department', $profil['department'] ?? '') == 'DGM' ? 'selected' : '' }}>DGM</option>
+                                            <option value="DGAS" {{ old('department', $profil['department'] ?? '') == 'DGAS' ? 'selected' : '' }}>DGAS</option>
+                                            <option value="DIEF" {{ old('department', $profil['department'] ?? '') == 'DIEF' ? 'selected' : '' }}>DIEF</option>
+                                            <option value="DPM" {{ old('department', $profil['department'] ?? '') == 'DPM' ? 'selected' : '' }}>DPM</option>
+                                            <option value="DFEA" {{ old('department', $profil['department'] ?? '') == 'DFEA' ? 'selected' : '' }}>DFEA</option>
+                                            <option value="DISS" {{ old('department', $profil['department'] ?? '') == 'DISS' ? 'selected' : '' }}>DISS</option>
+                                            <option value="DPFG" {{ old('department', $profil['department'] ?? '') == 'DPFG' ? 'selected' : '' }}>DPFG</option>
+                                            <option value="CP" {{ old('department', $profil['department'] ?? '') == 'CP' ? 'selected' : '' }}>CP</option>
+                                            <option value="SSS" {{ old('department', $profil['department'] ?? '') == 'SSS' ? 'selected' : '' }}>SSS</option>
+                                            <option value="CFPPH" {{ old('department', $profil['department'] ?? '') == 'CFPPH' ? 'selected' : '' }}>CFPPH</option>
                                         </select>
                                         @error('department')
                                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>

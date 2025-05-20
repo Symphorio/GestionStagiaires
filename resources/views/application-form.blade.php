@@ -211,10 +211,10 @@ document.getElementById('demandeStageForm').addEventListener('submit', async fun
 
         if (response.ok) {
             // 1. Notification navigateur
-            showBrowserNotification('Demande soumise avec succès!');
+            showBrowserNotification('Demande soumise avec succès! Vous recevrez un email de confirmation sous peu.');
 
             // 2. Toast notification
-            showToast('success', 'Votre demande a été enregistrée!');
+            showToast('success', 'Votre demande a été enregistrée! Vous recevrez un email de confirmation sous peu.');
 
             // 3. Message dans la page
             showPageMessage('success', data.message || 'Demande soumise avec succès!');
